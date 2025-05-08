@@ -10,7 +10,7 @@ npm run dev
 ## 開發流程
 1. 在 `src/pages/` 中新增頁面檔案
     - 例如：src/pages/Donation.jsx
-2.`src/pages/index.js` 新增路徑
+2. `src/pages/index.js` 新增路徑
 3. 修改 Sidebar
     - 打開 `src/components/Sidebar.jsx`
     - 新增一個欄位
