@@ -40,4 +40,11 @@ export const navlinks = [
     disabled: true,
     id: 5
   },
+  {
+    name: 'Proposal Voting',
+    imgUrl: logout,
+    link: '/proposal-voting',
+    id: 8
+
+  }
 ];
