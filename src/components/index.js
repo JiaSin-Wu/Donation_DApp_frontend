@@ -10,4 +10,5 @@ export { default as DisplayProposal } from './DisplayProposal';
 export { default as Dropdown } from './Dropdown';
 export { default as ProposalContent } from './PropsalContent';
 export { default as ProposalStructure } from './ProposalStructure';
+export { default as VotePieChart } from './VotePieChart';
 

@@ -69,15 +69,15 @@ const ProposalStructure = ({ children }) => {
         <div
           className="fixed flex gap-4 z-50"
           style={{
-            top: position.top  , // ✅ container 下方 20px
+            top: window.innerHeight - 80  , // ✅ container 下方 20px
             left: position.left + position.width / 2,  // ✅ container 中心
             transform: 'translateX(-50%)',
           }}
         >
-          <button className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-full font-semibold">
+          <button className="bg-[#1dc071] hover:bg-green-700 px-6 py-2 rounded-full font-semibold">
             Support
           </button>
-          <button className="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-full font-semibold">
+          <button className="bg-[#f04438] hover:bg-red-700 px-6 py-2 rounded-full font-semibold">
             Reject
           </button>
         </div>

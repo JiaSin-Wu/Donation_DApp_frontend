@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 
 import { useStateContext } from '../context';
-import { CountBox, CustomButton, Loader } from '../components';
+import { CountBox, CustomButton, Loader, VotePieChart } from '../components';
 import { calculateBarPercentage, daysLeft } from '../utils';
 import { thirdweb } from '../assets';
 import CountdownTimer from '../components/CountdownTimer';
@@ -70,13 +70,14 @@ const ProposalContent = () => {
     const collected = parseFloat(ethers.utils.parseEther(state.amountCollected));
     const target = parseFloat(ethers.utils.parseEther(state.target));
     return (collected <= target)
-  }
+}
 
   return (
     <div>
       {isLoading && <Loader />}
 
       <div className="w-full flex md:flex-row flex-col mt-10 gap-[30px]">
+        {/*圖片顯示處*/}
         <div className="flex-1 flex-col">
           <img src={state.image} alt="campaign" className="w-full h-[410px] object-cover rounded-xl" />
           <div className="relative w-full h-[5px] bg-[#3a3a43] mt-2">
@@ -84,12 +85,12 @@ const ProposalContent = () => {
             </div>
           </div>
         </div>
-
+        {/*上右側顯示欄*/}
         <div className="flex md:w-[150px] w-full flex-wrap justify-between gap-[30px]">
           <CountdownTimer title="Left" targetDate={state.deadline} />
           {/* <CountBox title="Days Left" value={remainingDays} /> */}
-          <CountBox title={`Raised of ${state.target}ETH`} value={state.amountCollected} />
-          <CountBox title="Total Backers" value={donators.length} />
+          <CountBox title={`Required ETH`} value={state.amountCollected} />
+          <VotePieChart supportCount={20} rejectCount= {20} /> 
         </div>
       </div>
 
