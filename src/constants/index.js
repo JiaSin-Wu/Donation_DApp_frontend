@@ -1,4 +1,4 @@
-import { createCampaign, dashboard, logout, payment, profile, withdraw } from '../assets';
+import { createCampaign, dashboard, logout, payment, profile, withdraw, vote } from '../assets';
 
 export const navlinks = [
   {
@@ -42,7 +42,7 @@ export const navlinks = [
   },
   {
     name: 'Proposal Voting',
-    imgUrl: logout,
+    imgUrl: vote,
     link: '/proposal-voting',
     id: 8
 
