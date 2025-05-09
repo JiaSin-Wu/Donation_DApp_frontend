@@ -9,4 +9,5 @@ export { default as Loader } from './Loader';
 export { default as DisplayProposal } from './DisplayProposal';
 export { default as Dropdown } from './Dropdown';
 export { default as ProposalContent } from './PropsalContent';
+export { default as ProposalStructure } from './ProposalStructure';
 
