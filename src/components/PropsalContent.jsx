@@ -75,8 +75,11 @@ const ProposalContent = () => {
     return (
         <div>
             {isLoading && <Loader />}
-
+            <h1 className="font-epilogue font-bold text-[28px] text-white mb-2">
+                {state.title}
+            </h1>
             <div className="w-full flex md:flex-row flex-col mt-10 gap-[30px]">
+
                 {/*圖片顯示處*/}
                 <div className="flex-1 flex-col">
                     <img src={state.image} alt="campaign" className="w-full h-[410px] object-cover rounded-xl" />
@@ -118,31 +121,15 @@ const ProposalContent = () => {
                         </div>
                     </div>
 
-                    <div>
-                        <h4 className="font-epilogue font-semibold text-[18px] text-white uppercase">Donators</h4>
-
-                        <div className="mt-[20px] flex flex-col gap-4">
-                            {donators.length > 0 ? donators.map((item, index) => (
-                                <div key={`${item.donator}-${index}`} className="flex justify-between items-center gap-4">
-                                    <p className="font-epilogue font-normal text-[16px] text-[#b2b3bd] leading-[26px] break-ll">{index + 1}. {item.donator}</p>
-                                    <p className="font-epilogue font-normal text-[16px] text-[#808191] leading-[26px] break-ll">{item.donation}</p>
-                                </div>
-                            )) : (
-                                <p className="font-epilogue font-normal text-[16px] text-[#808191] leading-[26px] text-justify">No donators yet. Be the first one!</p>
-                            )}
-                        </div>
-                    </div>
                 </div>
 
 
                 {/*start*/}
                 <div className="flex-1">
-                    <h4 className="font-epilogue font-semibold text-[18px] text-white uppercase">Fund</h4>
+                    <h4 className="font-epilogue font-semibold text-[18px] text-white uppercase">Finalize Proposal	</h4>
                     {/*Finalize*/}
                     <div className="mt-[20px] flex flex-col p-4 bg-[#1c1c24] rounded-[10px]">
-                        <p className="font-epilogue fount-medium text-[20px] leading-[30px] text-center text-[#808191]">
-                            Finalize the proposal
-                        </p>
+                        
                         <div className="mt-[30px]">
                             {remainingDays >= 0 && compareAmounts() ? (
                                 <input
@@ -157,12 +144,11 @@ const ProposalContent = () => {
                             <div className="my-[20px] p-4 bg-[#13131a] rounded-[10px]">
                                 <h4 className="font-epilogue font-semibold text-[14px] leading-[22px] text-white">Disclaimer</h4>
                                 <p className="mt-[20px] font-epilogue font-normal leading-[22px] text-[#808191]">You can only receive the funds if one day has passed since the proposal was created, more than 1% of users have voted, and over 50% have agreed.
-Otherwise, the proposal will be automatically rejected and you will not receive any ETH.</p>
+                                    Otherwise, the proposal will be automatically rejected and you will not receive any ETH.</p>
                             </div>
                             <CustomButton
                                 btnType="button"
-                                title={remainingDays >= 0 && compareAmounts() ? "Fund Campaign" :
-                                    (state.owner == address && (remainingDays == 0 || !compareAmounts())) ? "Withdraw Funds" : "Finished"}
+                                title="Finalize"
                                 styles="w-full bg-[#8c6dfd]"
                                 handleClick={() => {
                                     if (remainingDays >= 0 && compareAmounts()) handleDonate()
