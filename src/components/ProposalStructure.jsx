@@ -24,7 +24,7 @@ const ProposalStructure = ({ children }) => {
           width: rect.width,
         });
 
-        const midpoint = rect.top + rect.height / 2;
+        const midpoint = rect.top + rect.height / 3*2;
         setShowActionButtons(midpoint < window.innerHeight);
       }
     };
