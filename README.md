@@ -16,5 +16,7 @@ npm run dev
     - 新增一個欄位
 4. 在 `src/App.jsx` 裡的 Route 中註冊你的頁面
 
+Note: 目前有設限制，不能直接push到main，只有PR能合併到main，
+
 ## Source
 https://github.com/BahadorGh/Donation-Dapp
