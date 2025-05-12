@@ -37,5 +37,19 @@ export const navlinks = [
     imgUrl: vote,
     link: '/proposal-voting',
     id: 8
+  },
+  {
+    name: 'Donation',
+    imgUrl: payment,
+    link: '/donation',
+    id: 9
+
+  },
+  {
+    name: 'Donation Record',
+    imgUrl: payment,
+    link: '/donation-lookup',
+    id: 10
+
   }
 ];

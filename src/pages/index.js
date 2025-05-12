@@ -6,5 +6,6 @@ export { default as UpdateCampaign } from './UpdateCampaign';
 export { default as ProposalVoting } from './ProposalVoting';
 export { default as ProposalDetails } from './ProposalDetails';
 export { default as ApplicationSubmit } from './Application.jsx';
-
+export { default as Donation } from './Donation';
+export { default as DonationLookup } from './DonationLookup';
 
