@@ -14,6 +14,12 @@ export const navlinks = [
     id: 1
   },
   {
+    name: 'Application',
+    imgUrl: createCampaign,
+    link: '/application',
+    id: 2
+  },
+  {
     name: 'Profile',
     imgUrl: profile,
     link: '/profile',
@@ -31,6 +37,5 @@ export const navlinks = [
     imgUrl: vote,
     link: '/proposal-voting',
     id: 8
-
   }
 ];

@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 
 import { Sidebar, Navbar } from './components';
-import { CampaignDetails, CreateCampaign, UpdateCampaign , Home, Profile, ProposalVoting, ProposalDetails } from './pages';
+import { CampaignDetails, CreateCampaign, UpdateCampaign, Home, Profile, ProposalVoting, ProposalDetails, ApplicationSubmit } from './pages';
 
 const App = () => {
   return (
@@ -22,6 +22,7 @@ const App = () => {
           <Route path="/campaign-update/:id" element={<UpdateCampaign />} />
           <Route path="/proposal-voting" element={<ProposalVoting />} />
           <Route path="/proposal-details/:id" element={<ProposalDetails />} />
+          <Route path="/application" element={<ApplicationSubmit />} />
         </Routes>
       </div>
     </div>
