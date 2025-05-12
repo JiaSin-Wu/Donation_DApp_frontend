@@ -14,6 +14,12 @@ export const navlinks = [
     id: 1
   },
   {
+    name: 'Disaster Voting',
+    imgUrl: vote,
+    link: '/disaster-voting',
+    id: 3
+  },
+  {
     name: 'Application',
     imgUrl: createCampaign,
     link: '/application',
