@@ -1,6 +1,6 @@
 import React from 'react';
-import './index.css';
-import './popup.css';
+import '../styles/index.css';
+import '../styles/popup.css';
 import Select from 'react-select';
 import { useState } from 'react';
 import axios from 'axios';
