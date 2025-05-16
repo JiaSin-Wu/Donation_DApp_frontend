@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Dropdown from './Dropdown';
+import { toast } from 'react-toastify';
+import { useStateContext } from '../context';
 
 const ProposalStructure = ({ children }) => {
     const containerRef = useRef();
@@ -10,7 +12,21 @@ const ProposalStructure = ({ children }) => {
         height: 0,
         width: 0,
     });
+    const { address } = useStateContext();
     const [showActionButtons, setShowActionButtons] = useState(false);
+    const handleAction = (action) => {
+      if (!address) {
+        alert("Please connect your wallet first.");
+        return;
+      }
+
+      // 如果已登入，執行支援或拒絕的邏輯
+      if (action === "support") {
+        // doSupport()
+      } else if (action === "reject") {
+        // doReject()
+      }
+    };
 
 
 
@@ -85,10 +101,16 @@ const ProposalStructure = ({ children }) => {
                         transform: 'translateX(-50%)',
                     }}
                 >
-                    <button className="bg-[#1dc071] hover:bg-green-700 px-6 py-2 rounded-full font-semibold">
+                    <button 
+                        className="bg-[#1dc071] hover:bg-green-700 px-6 py-2 rounded-full font-semibold"
+                        onClick={() => handleAction("support")}
+                    >
                         Support
                     </button>
-                    <button className="bg-[#f04438] hover:bg-red-700 px-6 py-2 rounded-full font-semibold">
+                    <button 
+                        className="bg-[#f04438] hover:bg-red-700 px-6 py-2 rounded-full font-semibold"
+                        onClick={() => handleAction("reject")}
+                    >
                         Reject
                     </button>
                 </div>
