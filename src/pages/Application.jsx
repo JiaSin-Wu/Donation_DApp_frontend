@@ -11,32 +11,46 @@ import 'reactjs-popup/dist/index.css';
 const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
 const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY;
 
+// Constants
+const GAS_FEE = 0.001;
+const VOTE_PERIOD_DAYS = 7;
+
 const ApplicationSubmit = () => {
-  const options = [
+  const [disasterOptions, setDisasterOptions] = useState([
     {value: '0', label: "earthquake"},
     {value: '1', label: "volcano"},
     {value: '2', label: "flood"},
     {value: '3', label: "hurricane"},
     {value: '4', label: "tornado"},
-    {value: '5', label: "tsunami"},]
+    {value: '5', label: "tsunami"},
+  ]);
 
+  const setDisasterList = (disasterList) => {
+    const formattedOptions = disasterList.map((disaster, index) => ({
+      value: index.toString(),
+      label: disaster.toLowerCase()
+    }));
+    setDisasterOptions(formattedOptions);
+  };
+  // Call the getDisasterList() here, eg. setDisasterList(getDisasterList());
   // Form data structure
   const [formData, setFormData] = useState({
     disaster: null,
     title: '',
     amount: '',
     description: '',
-    previewFile: null,
-    evidenceFile: null,
     previewIpfsHash: '',
     evidenceIpfsHash: '',
-    previewUploadStatus: '',
-    evidenceUploadStatus: '',
-    gasFee: "0.01",
-    voteEndDate: "2025/12/12 12:12:12 pm",
     applicantAddress: "xxxxxx123xxxxxxx",
     submissionDate: new Date().toISOString(),
-    status: 'pending'
+  });
+
+  // Separate state for file handling
+  const [fileData, setFileData] = useState({
+    previewFile: null,
+    evidenceFile: null,
+    previewUploadStatus: '',
+    evidenceUploadStatus: '',
   });
 
   const updateFormData = (field, value) => {
@@ -46,7 +60,17 @@ const ApplicationSubmit = () => {
     }));
   };
 
+  const updateFileData = (field, value) => {
+    setFileData(prevData => ({
+      ...prevData,
+      [field]: value
+    }));
+  };
+
   const logging = () => {
+    const voteEndDate = new Date(formData.submissionDate);
+    voteEndDate.setDate(voteEndDate.getDate() + VOTE_PERIOD_DAYS);
+
     console.log('Form Data:', {
       disaster: formData.disaster,
       title: formData.title,
@@ -54,25 +78,24 @@ const ApplicationSubmit = () => {
       description: formData.description,
       previewIpfsHash: formData.previewIpfsHash,
       evidenceIpfsHash: formData.evidenceIpfsHash,
-      gasFee: formData.gasFee,
-      voteEndDate: formData.voteEndDate,
       applicantAddress: formData.applicantAddress,
       submissionDate: formData.submissionDate,
-      status: formData.status
+      gasFee: GAS_FEE,
+      voteEndDate: voteEndDate.toISOString(),
     });
-  };
+  }
 
   const onPreviewFileChange = (event) => {
     const file = event.target.files[0];
-    updateFormData('previewFile', file);
-    updateFormData('previewUploadStatus', '');
+    updateFileData('previewFile', file);
+    updateFileData('previewUploadStatus', '');
     updateFormData('previewIpfsHash', '');
   };
 
   const onEvidenceFileChange = (event) => {
     const file = event.target.files[0];
-    updateFormData('evidenceFile', file);
-    updateFormData('evidenceUploadStatus', '');
+    updateFileData('evidenceFile', file);
+    updateFileData('evidenceUploadStatus', '');
     updateFormData('evidenceIpfsHash', '');
   };
 
@@ -125,21 +148,21 @@ const ApplicationSubmit = () => {
 
   const onPreviewUpload = () => {
     uploadToIPFS(
-      formData.previewFile, 
+      fileData.previewFile, 
       (hash) => updateFormData('previewIpfsHash', hash),
-      (status) => updateFormData('previewUploadStatus', status)
+      (status) => updateFileData('previewUploadStatus', status)
     );
   };
 
   const onEvidenceUpload = () => {
     uploadToIPFS(
-      formData.evidenceFile,
+      fileData.evidenceFile,
       (hash) => updateFormData('evidenceIpfsHash', hash),
-      (status) => updateFormData('evidenceUploadStatus', status)
+      (status) => updateFileData('evidenceUploadStatus', status)
     );
   };
 
-  const fileData = (file, ipfsHash, uploadStatus) => {
+  const fileDataDisplay = (file, ipfsHash, uploadStatus) => {
     if (file) {
       return (
         <div>
@@ -158,7 +181,6 @@ const ApplicationSubmit = () => {
     } else {
       return (
         <div>
-          <br />
           <h4>Choose before Pressing the Upload button</h4>
         </div>
       );
@@ -219,8 +241,8 @@ const ApplicationSubmit = () => {
     if (!formData.title) missingFields.push('Title');
     if (!formData.amount) missingFields.push('Amount');
     if (!formData.description) missingFields.push('Description');
-    if (!formData.previewFile) missingFields.push('Preview Image/Video');
-    if (!formData.evidenceFile) missingFields.push('Evidence');
+    if (!fileData.previewFile) missingFields.push('Preview Image/Video');
+    if (!fileData.evidenceFile) missingFields.push('Evidence');
     
     return missingFields;
   };
@@ -233,70 +255,132 @@ const ApplicationSubmit = () => {
     return true;
   };
 
+  const submitForm = async () => {
+    if (!handleSubmit()) {
+      return;
+    }
+
+    try {
+      // Prepare the data to be sent
+      const submissionData = {
+        disaster: formData.disaster,
+        title: formData.title,
+        amount: parseFloat(formData.amount),
+        description: formData.description,
+        previewIpfsHash: formData.previewIpfsHash,
+        evidenceIpfsHash: formData.evidenceIpfsHash,
+        applicantAddress: formData.applicantAddress,
+        submissionDate: formData.submissionDate,
+      };
+
+      // Call external function, eg.await submitApplication(submissionData)
+      logging();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
+  };
+
   return (
     <div className="text-white p-6 space-y-6">
       <div className="space-y-2">
-        <label className="text-white block">災害: 
+        <label className="text-white block">Disaster: 
           <Select 
-            options={options}
+            options={disasterOptions}
             value={formData.disaster}
-            onChange={(disaster) => updateFormData('disaster', disaster)}
-            type="text"
-            className="text-black mt-1 w-full"
-          />
+            onChange={(disaster) => updateFormData('disaster', disaster)} 
+            className="mt-1 w-full"
+            styles={{
+              control: (base) => ({
+                ...base,
+                backgroundColor: "#363951",
+                color: "#ffffff",
+                borderColor: "#4b4e6d",
+              }),
+              singleValue: (base) => ({
+                ...base,
+                color: "#ffffff",
+              }),
+              menu: (base) => ({
+                ...base,
+                backgroundColor: "#2c2f45", 
+                color: "#ffffff",
+              }),
+              option: (base, state) => ({
+                ...base,
+                backgroundColor: state.isFocused 
+                  ? "#4b4e6d"        
+                  : "#2c2f45",       
+                color: "#ffffff",
+                cursor: "pointer",
+              }),
+              placeholder: (base) => ({
+                ...base,
+                color: "#cccccc",
+              }),
+              input: (base) => ({
+                ...base,
+                color: "#ffffff",
+              }),
+            }}
+          />                                                                                                                     
         </label>
       </div>
 
+
       <div className="space-y-2">
         <label className="text-white block">
-          請款名稱: 
+          Application Title: 
           <input
             value={formData.title}
             onChange={e => updateFormData('title', e.target.value)}
             type="text"
-            className="text-black bg-white mt-1 w-full p-2 rounded"
+            className="bg-[#363951] text-white bg-white mt-1 w-full p-2 rounded"
           />
         </label>
       </div>
 
       <div className="space-y-2">
         <label className="text-white block">
-          請款金額: 
+          Application Amount: 
           <input
             value={formData.amount}
             onChange={e => updateFormData('amount', e.target.value)}
             type="number"
-            className="text-black bg-white mt-1 w-full p-2 rounded"
+            className="bg-[#363951] text-white bg-white mt-1 w-full p-2 rounded"
           />
         </label>
       </div>
 
       <div className="space-y-2">
         <label className="text-white block">
-          說明文字: 
+          Other Additional Note: 
           <input
             value={formData.description}
             onChange={e => updateFormData('description', e.target.value)}
             type="text"
-            className="text-black bg-white mt-1 w-full p-2 rounded"
+            className="bg-[#363951] text-white bg-white mt-1 w-full p-2 rounded"
           />
         </label>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <input type="file" onChange={onPreviewFileChange} className="text-white" />
-          <button onClick={onPreviewUpload} className="bg-[#8c6dfd] text-white px-4 py-2 rounded-lg">Upload Preview Image/Video</button>
-          <div className="text-white">
-            {fileData(formData.previewFile, formData.previewIpfsHash, formData.previewUploadStatus)}
+          <input type="file" onChange={onPreviewFileChange} className="text-white"/>
+          <button onClick={onPreviewUpload} className="bg-[#8c6dfd] text-white px-4 py-2 rounded-lg">Upload</button>
+          <br />
+          <label className="text-white">Please upload your preview media ( jpg, png, mp4 ... ) here</label>
+          <div className="bg-[#5d5f6f] text-black">
+            {fileDataDisplay(fileData.previewFile, formData.previewIpfsHash, fileData.previewUploadStatus)}
           </div>
         </div>
 
         <div className="space-y-2">
           <input type="file" onChange={onEvidenceFileChange} className="text-white" />
-          <button onClick={onEvidenceUpload} className="bg-[#8c6dfd] text-white px-4 py-2 rounded-lg">Upload Evidence</button>
-          <div className="text-white">
-            {fileData(formData.evidenceFile, formData.evidenceIpfsHash, formData.evidenceUploadStatus)}
+          <button onClick={onEvidenceUpload} className="bg-[#8c6dfd] text-white px-4 py-2 rounded-lg">Upload</button>
+          <br />
+          <label className="text-white">Please upload your evidence ( zip, 7z ... ) here</label>
+          <div className="bg-[#5d5f6f] text-black">
+            {fileDataDisplay(fileData.evidenceFile, formData.evidenceIpfsHash, fileData.evidenceUploadStatus)}
           </div>
         </div>
       </div>
@@ -306,6 +390,7 @@ const ApplicationSubmit = () => {
           trigger={<button className="button bg-[#8c6dfd] text-white px-4 py-2 rounded-lg"> Submit </button>}
           modal
           nested
+          overlayClassName="popup-overlay"
         >
           {close => {
             const missingFields = validateForm();
@@ -334,43 +419,83 @@ const ApplicationSubmit = () => {
             }
 
             return (
-              <div className="modal bg-[#1c1c24] text-white">
-                <div className="content">
-                  <h2>Submit Confirmation</h2>
-                  <p>Are you sure you want to submit this form?</p>
-                  <br />
-                  <p>Disaster : {formData.disaster.label} Title : {formData.title}</p>
-                  <br />
-                  <div className="preview-section">
-                    <h3>Preview Image/Video:</h3>
-                    <PreviewMedia file={formData.previewFile} ipfsHash={formData.previewIpfsHash} />
-                    <p>Preview Link: {formData.previewIpfsHash ? 
-                      <a href={`https://ipfs.io/ipfs/${formData.previewIpfsHash}`} target="_blank" rel="noopener noreferrer" className="text-[#8c6dfd]">
-                        View on IPFS
-                      </a> 
-                      : 'No preview uploaded'}
-                    </p>
+              <div className="modal bg-[#1c1c24] text-white rounded-lg overflow-hidden max-h-[90vh] flex flex-col">
+                <div className="content p-0 overflow-y-auto">
+                  <div className="p-6">
+                    <h2 className="text-2xl font-bold">Submit Confirmation</h2>
                   </div>
-                  <br />
-                  <p>Amount : {formData.amount} Gas Fee : {formData.gasFee}</p>
-                  <br />
-                  <p>Voting End Date: {formData.voteEndDate} Applicant Address : {formData.applicantAddress}</p>
-                  <br />
-                  <div className="actions">
+                  
+                  <div className="px-6 pb-6 space-y-6">
+                    <div className="bg-[#2c2c2c] p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-3">Application Information</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Disaster Type</span>
+                          <span className="font-medium">{formData.disaster.label}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Title</span>
+                          <span className="font-medium">{formData.title}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Amount</span>
+                          <span className="font-medium">{formData.amount}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Gas Fee</span>
+                          <span className="font-medium">{GAS_FEE} ETH</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Voting End Date</span>
+                          <span className="font-medium">
+                            {new Date(new Date(formData.submissionDate).getTime() + VOTE_PERIOD_DAYS * 24 * 60 * 60 * 1000).toString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Applicant Address</span>
+                          <span className="font-medium break-all ml-2">{formData.applicantAddress}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#2c2c2c] p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-3">Preview Media</h3>
+                      <div className="space-y-3">
+                        <PreviewMedia file={fileData.previewFile} ipfsHash={formData.previewIpfsHash} />
+                        {formData.previewIpfsHash ? (
+                          <a 
+                            href={`https://ipfs.io/ipfs/${formData.previewIpfsHash}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-[#8c6dfd] hover:text-[#7b5dfd] flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                            View on IPFS
+                          </a>
+                        ) : (
+                          <p className="text-gray-400">No preview uploaded</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-4 p-6 sticky bottom-0">
                     <button
-                      className="button bg-[#8c6dfd] text-white px-4 py-2 rounded-lg"
+                      className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                      onClick={close}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="px-6 py-2 bg-[#8c6dfd] hover:bg-[#7b5dfd] text-white rounded-lg transition-colors"
                       onClick={() => {
-                        logging();
+                        submitForm();
                         close();
                       }}
                     >
                       Confirm
-                    </button>
-                    <button
-                      className="button bg-[#8c6dfd] text-white px-4 py-2 rounded-lg"
-                      onClick={close}
-                    >
-                      Cancel
                     </button>
                   </div>
                 </div>
