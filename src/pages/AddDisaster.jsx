@@ -14,7 +14,8 @@ const AddDisaster = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({
     name: '',
-    description: ''
+    description: '',
+    walletAddress: ''
   });
 
   const deadlineTimestamp = Date.now() + ONE_DAY_MS;
@@ -28,11 +29,20 @@ const AddDisaster = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 驗證錢包地址
+    try {
+      ethers.getAddress(form.walletAddress);
+    } catch (error) {
+      alert('請輸入有效的以太坊錢包地址');
+      return;
+    }
+
     const confirm = window.confirm(
       `請確認以下資訊：\n` +
       `災難名稱：${form.name}\n` +
       `描述：${form.description}\n` +
       `質押金額：${STAKE_AMOUNT} ETH\n` +
+      `募款錢包地址：${form.walletAddress}\n` +
       `投票截止時間：${voteDeadlineString}\n\n` +
       `是否送出？`
     );
@@ -45,7 +55,8 @@ const AddDisaster = () => {
       name: form.name,
       description: form.description,
       deadline: deadlineTimestamp,
-      stakeAmount: STAKE_AMOUNT
+      stakeAmount: STAKE_AMOUNT,
+      walletAddress: form.walletAddress
     };
 
     console.log('Submitting disaster:', payload);
@@ -84,6 +95,14 @@ const AddDisaster = () => {
           handleChange={(e) => handleFormFieldChange('description', e)}
         />
 
+        <FormField
+          labelName="Wallet Address *"
+          placeholder="Enter the wallet address"
+          inputType="text"
+          value={form.walletAddress}
+          handleChange={(e) => handleFormFieldChange('walletAddress', e)}
+        />
+
         <div className="w-full flex justify-start items-center p-4 bg-[#8c6dfd] min-h-[120px] rounded-[10px] flex-col gap-2">
           <div className="flex items-center">
             <img src={money} alt="money" className="w-[40px] h-[40px] object-contain mr-3" />
@@ -92,7 +111,7 @@ const AddDisaster = () => {
             </h4>
           </div>
           <p className="text-white text-sm mt-2">
-            投票將於 <span className="text-green-400 font-semibold">{voteDeadlineString}</span> 截止
+            Voting ends on <span className="text-green-400 font-semibold">{voteDeadlineString}</span>
           </p>
         </div>
 
