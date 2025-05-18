@@ -47,7 +47,7 @@ const DonationLookup = () => {
 
     return (
         <Container>
-            <h1 style={{fontSize: 50, color: 'white'}}>Donation Record</h1>
+            <h1 style={{fontSize: 50, color: 'white'}}>My Donation</h1>
             <Row className="mt-4">
                 {items.map((item) => (
                     <Col key={item.id} xs={12} sm={6} md={4} className="mb-4">
