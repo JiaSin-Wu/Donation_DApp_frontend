@@ -8,6 +8,12 @@ export const navlinks = [
     id: 0
   },
   {
+    name: 'Introduction',
+    imgUrl: dashboard,
+    link: '/introduction',
+    id: 11
+  },
+  {
     name: 'Add Disaster',
     imgUrl: createCampaign,
     link: '/add-disaster',

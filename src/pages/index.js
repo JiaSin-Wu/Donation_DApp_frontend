@@ -9,3 +9,4 @@ export { default as ApplicationSubmit } from './Application.jsx';
 export { default as Donation } from './Donation';
 export { default as DonationLookup } from './DonationLookup';
 export { default as DisasterVoting } from './DisasterVoting';
+export { default as Introduction } from './Introduction';
