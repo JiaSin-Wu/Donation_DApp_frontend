@@ -26,7 +26,7 @@ const DonateNow = () => {
   const expiredCampaigns = campaigns.filter(campaign => parseInt(daysLeft(campaign.deadline)) <= 0);
 
   return (
-    <div>
+    <div className="pr-8">
       <div className="flex justify-start mb-5">
         <div className="flex bg-[#1c1c24] rounded-[10px] overflow-hidden">
           <button 
