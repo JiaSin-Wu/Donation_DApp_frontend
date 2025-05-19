@@ -23,7 +23,8 @@ const Navbar = () => {
         <h1 className="font-epilogue font-bold text-[20px]">
           <span className="text-[#4acd8d]">When Disaster Strikes, </span>
           <span className="text-white">We Unite </span>
-          <span className="text-[#808191] text-[18px]">災難來襲，我們團結一致</span>
+          <span className="text-[#808191] text-[18px]">災難來襲，我們團結一致 </span>
+          <span className="ml-2 text-[#8c6dfd] text-[16px]">| Empowered by DAO 由去中心化自治組織驅動</span>
         </h1>
       </div>
 
