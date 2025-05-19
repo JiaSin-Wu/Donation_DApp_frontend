@@ -1,20 +1,37 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
+import axios from 'axios';
 
 import { CustomButton, FormField, Loader } from '../components';
 import { money } from '../assets';
+import { DisasterResponseAddress, DisasterResponseABI } from '../constants';
+import { useStateContext } from '../context';
 
-const STAKE_AMOUNT = 0.1; // ETH
+// Get Pinata credentials from environment variables
+const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
+const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY;
+
+const STAKE_AMOUNT = 0.01; // ETH
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const SEVEN_DAYS_MS = 7 * ONE_DAY_MS;
 
 const AddDisaster = () => {
   const navigate = useNavigate();
+  const { address, connect, contract } = useStateContext();
   const [isLoading, setIsLoading] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState('');
   const [form, setForm] = useState({
     name: '',
-    description: ''
+    description: '',
+    walletAddress: '',
+    imageIpfsHash: ''
+  });
+
+  const [fileData, setFileData] = useState({
+    imageFile: null,
+    uploadStatus: ''
   });
 
   const deadlineTimestamp = Date.now() + ONE_DAY_MS;
@@ -25,14 +42,182 @@ const AddDisaster = () => {
     setForm({ ...form, [fieldName]: e.target.value });
   };
 
+  const onImageFileChange = (event) => {
+    const file = event.target.files[0];
+    setFileData(prev => ({
+      ...prev,
+      imageFile: file,
+      uploadStatus: ''
+    }));
+    setForm(prev => ({ ...prev, imageIpfsHash: '' }));
+  };
+
+  const uploadToIPFS = async (file) => {
+    if (!file) {
+      setFileData(prev => ({ ...prev, uploadStatus: 'Please select a file first' }));
+      return;
+    }
+
+    if (!PINATA_API_KEY || !PINATA_SECRET_KEY) {
+      setFileData(prev => ({ 
+        ...prev, 
+        uploadStatus: 'Error: Pinata API credentials not found. Please check your .env file.' 
+      }));
+      console.error('Pinata credentials missing:', {
+        apiKey: PINATA_API_KEY ? 'Present' : 'Missing',
+        secretKey: PINATA_SECRET_KEY ? 'Present' : 'Missing'
+      });
+      return;
+    }
+
+    try {
+      setFileData(prev => ({ ...prev, uploadStatus: 'Uploading to IPFS...' }));
+      
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // 檢查文件大小
+      if (file.size > 10 * 1024 * 1024) { // 10MB
+        throw new Error('File size exceeds 10MB limit');
+      }
+
+      // 檢查文件類型
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Only image files are allowed');
+      }
+
+      console.log('Attempting to upload to Pinata...');
+      console.log('API Key:', PINATA_API_KEY.substring(0, 5) + '...');
+      console.log('Secret Key:', PINATA_SECRET_KEY.substring(0, 5) + '...');
+
+      const response = await axios.post(
+        'https://api.pinata.cloud/pinning/pinFileToIPFS',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'pinata_api_key': PINATA_API_KEY,
+            'pinata_secret_api_key': PINATA_SECRET_KEY
+          },
+          timeout: 30000 // 30 seconds timeout
+        }
+      );
+
+      if (!response.data || !response.data.IpfsHash) {
+        throw new Error('Invalid response from Pinata API');
+      }
+
+      const ipfsHash = response.data.IpfsHash;
+      setForm(prev => ({ ...prev, imageIpfsHash: ipfsHash }));
+      setFileData(prev => ({ ...prev, uploadStatus: 'Upload successful!' }));
+      
+      console.log('IPFS Hash:', ipfsHash);
+      console.log('View file at:', `https://gateway.pinata.cloud/ipfs/${ipfsHash}`);
+    } catch (error) {
+      console.error('Error uploading to IPFS:', error);
+      
+      let errorMessage = 'Upload failed: ';
+      
+      if (error.response) {
+        // 服務器回應了錯誤狀態碼
+        console.error('Error response:', error.response.data);
+        errorMessage += `Server error: ${error.response.status} - ${error.response.data?.error || 'Unknown error'}`;
+      } else if (error.request) {
+        // 請求發送但沒有收到回應
+        console.error('No response received:', error.request);
+        errorMessage += 'No response from server. Please check your internet connection.';
+      } else {
+        // 請求設置時發生錯誤
+        errorMessage += error.message;
+      }
+
+      setFileData(prev => ({ 
+        ...prev, 
+        uploadStatus: errorMessage
+      }));
+    }
+  };
+
+  const onImageUpload = () => {
+    uploadToIPFS(fileData.imageFile);
+  };
+
+  const PreviewImage = ({ file, ipfsHash }) => {
+    if (!file) return null;
+
+    const previewUrl = ipfsHash 
+      ? `https://ipfs.io/ipfs/${ipfsHash}`
+      : URL.createObjectURL(file);
+
+    return (
+      <div className="preview-container">
+        <img 
+          src={previewUrl} 
+          alt="Preview" 
+          style={{ 
+            maxWidth: '100%', 
+            maxHeight: '200px', 
+            objectFit: 'contain',
+            margin: '10px 0',
+            borderRadius: '4px'
+          }} 
+        />
+      </div>
+    );
+  };
+
+  const handleConnect = async () => {
+    try {
+      setIsConnecting(true);
+      setConnectionError('');
+      
+      // 檢查是否安裝了 MetaMask
+      if (typeof window.ethereum === 'undefined') {
+        setConnectionError('請安裝 MetaMask 錢包擴展');
+        return;
+      }
+
+      // 嘗試連接錢包
+      await connect();
+      
+      // 檢查是否在 Sepolia 測試網
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      if (chainId !== '0xaa36a7') { // Sepolia 的 chainId
+        setConnectionError('請切換到 Sepolia 測試網');
+        return;
+      }
+    } catch (error) {
+      console.error('Wallet connection error:', error);
+      setConnectionError(error.message || '連接錢包時發生錯誤');
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!address) {
+      alert('請先連接錢包');
+      return;
+    }
+
+    if (!contract) {
+      alert('合約未初始化，請重新連接錢包');
+      return;
+    }
+
+    if (!form.imageIpfsHash) {
+      alert('請上傳災難相關圖片');
+      return;
+    }
 
     const confirm = window.confirm(
       `請確認以下資訊：\n` +
       `災難名稱：${form.name}\n` +
       `描述：${form.description}\n` +
       `質押金額：${STAKE_AMOUNT} ETH\n` +
+      `募款錢包地址：${form.walletAddress}\n` +
       `投票截止時間：${voteDeadlineString}\n\n` +
       `是否送出？`
     );
@@ -41,21 +226,47 @@ const AddDisaster = () => {
 
     setIsLoading(true);
 
-    const payload = {
-      name: form.name,
-      description: form.description,
-      deadline: deadlineTimestamp,
-      stakeAmount: STAKE_AMOUNT
-    };
+    try {
+      // 準備合約調用參數
+      const contractParams = {
+        owner: address,
+        title: form.name,
+        description: form.description,
+        target: ethers.utils.parseUnits(STAKE_AMOUNT.toString(), 18),
+        deadline: deadlineTimestamp,
+        image: form.imageIpfsHash
+      };
 
-    console.log('Submitting disaster:', payload);
+      console.log('Contract address:', DisasterResponseAddress);
+      console.log('Contract ABI:', DisasterResponseABI);
+      console.log('Account:', address);
+      console.log('Submitting disaster request:', contractParams);
 
-    // 模擬 API 呼叫
-    setTimeout(() => {
-      alert('Disaster submitted successfully!');
+      // 調用智能合約
+      const tx = await contract.call('createCampaign', [
+        contractParams.owner,
+        contractParams.title,
+        contractParams.description,
+        contractParams.target,
+        contractParams.deadline,
+        contractParams.image
+      ]);
+
+      console.log('Transaction sent:', tx.hash);
+      alert('交易已發送，等待確認...');
+      
+      // 等待交易確認
+      const receipt = await tx.wait();
+      console.log('Transaction confirmed:', receipt);
+
+      alert('災難請求已成功提交！');
       setIsLoading(false);
       navigate('/');
-    }, 1500);
+    } catch (error) {
+      console.error('Error submitting disaster request:', error);
+      alert('提交失敗：' + (error.message || '未知錯誤'));
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -67,43 +278,104 @@ const AddDisaster = () => {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-full mt-[65px] flex flex-col gap-[30px]">
-        <FormField
-          labelName="Disaster Name *"
-          placeholder="e.g., Red Cross"
-          inputType="text"
-          value={form.name}
-          handleChange={(e) => handleFormFieldChange('name', e)}
-        />
-
-        <FormField
-          labelName="Description *"
-          placeholder="Describe the disaster and needed relief"
-          isTextArea
-          value={form.description}
-          handleChange={(e) => handleFormFieldChange('description', e)}
-        />
-
-        <div className="w-full flex justify-start items-center p-4 bg-[#8c6dfd] min-h-[120px] rounded-[10px] flex-col gap-2">
-          <div className="flex items-center">
-            <img src={money} alt="money" className="w-[40px] h-[40px] object-contain mr-3" />
-            <h4 className="font-epilogue font-bold text-[18px] text-white">
-              You will stake <span className="text-yellow-300">{STAKE_AMOUNT} ETH</span>
-            </h4>
-          </div>
-          <p className="text-white text-sm mt-2">
-            投票將於 <span className="text-green-400 font-semibold">{voteDeadlineString}</span> 截止
-          </p>
-        </div>
-
-        <div className="flex justify-center items-center mt-[40px]">
+      {!address ? (
+        <div className="flex flex-col items-center justify-center mt-8">
+          <p className="text-white text-lg mb-4">請先連接錢包</p>
+          {connectionError && (
+            <p className="text-red-500 mb-4">{connectionError}</p>
+          )}
           <CustomButton
-            btnType="submit"
-            title="Submit Disaster"
-            styles="bg-[#1dc071]"
+            btnType="button"
+            title={isConnecting ? "連接中..." : "連接錢包"}
+            styles="bg-[#8c6dfd]"
+            handleClick={handleConnect}
+            disabled={isConnecting}
           />
         </div>
-      </form>
+      ) : (
+        <form onSubmit={handleSubmit} className="w-full mt-[65px] flex flex-col gap-[30px]">
+          <div className="flex justify-end">
+            <p className="text-white">
+              已連接錢包: {address.substring(0, 6)}...{address.substring(38)}
+            </p>
+          </div>
+
+          <FormField
+            labelName="Disaster Name *"
+            placeholder="e.g., Red Cross"
+            inputType="text"
+            value={form.name}
+            handleChange={(e) => handleFormFieldChange('name', e)}
+          />
+
+          <FormField
+            labelName="Description *"
+            placeholder="Describe the disaster and needed relief"
+            isTextArea
+            value={form.description}
+            handleChange={(e) => handleFormFieldChange('description', e)}
+          />
+
+          <FormField
+            labelName="Wallet Address *"
+            placeholder="Enter the wallet address"
+            inputType="text"
+            value={form.walletAddress}
+            handleChange={(e) => handleFormFieldChange('walletAddress', e)}
+          />
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <input type="file" onChange={onImageFileChange} className="text-white" accept="image/*"/>
+              <button 
+                type="button"
+                onClick={onImageUpload} 
+                className="bg-[#8c6dfd] text-white px-4 py-2 rounded-lg"
+              >
+                Upload Image
+              </button>
+              <br />
+              <label className="text-white">Please upload a disaster-related image (jpg, png)</label>
+              <div className="bg-[#5d5f6f] text-black p-4 rounded-lg">
+                {fileData.imageFile && (
+                  <div>
+                    <p>File Name: {fileData.imageFile.name}</p>
+                    <p>File Type: {fileData.imageFile.type}</p>
+                    {form.imageIpfsHash && (
+                      <div>
+                        <p>IPFS Hash (CID): {form.imageIpfsHash}</p>
+                        <p>View on IPFS: <a href={`https://ipfs.io/ipfs/${form.imageIpfsHash}`} target="_blank" rel="noopener noreferrer">View Image</a></p>
+                      </div>
+                    )}
+                    {fileData.uploadStatus && <p>Status: {fileData.uploadStatus}</p>}
+                  </div>
+                )}
+                <PreviewImage file={fileData.imageFile} ipfsHash={form.imageIpfsHash} />
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full flex justify-start items-center p-4 bg-[#8c6dfd] min-h-[120px] rounded-[10px] flex-col gap-2">
+            <div className="flex items-center">
+              <img src={money} alt="money" className="w-[40px] h-[40px] object-contain mr-3" />
+              <h4 className="font-epilogue font-bold text-[18px] text-white">
+                You will stake <span className="text-yellow-300">{STAKE_AMOUNT} ETH</span>
+              </h4>
+            </div>
+            <p className="text-white text-sm mt-2">
+              Voting ends on <span className="text-green-400 font-semibold">{voteDeadlineString}</span>
+            </p>
+          </div>
+
+          <div className="flex justify-center items-center mt-[40px]">
+            <CustomButton
+              btnType="submit"
+              title="Submit Disaster"
+              styles="bg-[#1dc071]"
+            />
+          </div>
+        </form>
+      )}
     </div>
   );
 };

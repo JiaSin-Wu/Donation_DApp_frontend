@@ -1,4 +1,6 @@
 import { createCampaign, dashboard, logout, payment, profile, withdraw, vote } from '../assets';
+import contractAbi from '../abis/contract-abi.json';
+import contractAddress from '../abis/contract-address.json';
 
 export const navlinks = [
   {
@@ -55,13 +57,14 @@ export const navlinks = [
     imgUrl: payment,
     link: '/donation',
     id: 9
-
   },
   {
     name: 'Donation Record',
     imgUrl: payment,
     link: '/donation-lookup',
     id: 10
-
   }
 ];
+
+export const DisasterResponseAddress = contractAddress.contractAddress;
+export const DisasterResponseABI = contractAbi;
