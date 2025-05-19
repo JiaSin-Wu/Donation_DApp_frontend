@@ -12,7 +12,7 @@ import { useStateContext } from '../context';
 const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
 const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY;
 
-const STAKE_AMOUNT = 0.1; // ETH
+const STAKE_AMOUNT = 0.01; // ETH
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const SEVEN_DAYS_MS = 7 * ONE_DAY_MS;
 
