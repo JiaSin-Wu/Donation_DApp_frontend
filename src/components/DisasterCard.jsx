@@ -1,14 +1,15 @@
 import React from 'react';
 
-import { tagType, thirdweb } from '../assets';
+import {  thirdweb } from '../assets';
 import { daysLeft } from '../utils';
 
-const DisasterCard = ({ owner, title, description, target, deadline, amountCollected, image, handleClick }) => {
-  const remainingDays = daysLeft(deadline);
+const DisasterCard = ({ proposer_addr, title, description, dueDate, amount, photoCid, handleClick }) => {
+    
+  const remainingDays = daysLeft(dueDate*1000);
   
   return (
     <div className="sm:w-[288px] w-full rounded-[15px] bg-[#1c1c24] cursor-pointer" onClick={handleClick}>
-      <img src={image} alt="fund" className="w-full h-[158px] object-cover rounded-[15px]"/>
+      <img src={`https://gateway.pinata.cloud/ipfs/${photoCid}`} alt="preview" className="w-full h-[158px] object-cover rounded-[15px]"/>
 
       <div className="flex flex-col p-4">
         
@@ -20,7 +21,7 @@ const DisasterCard = ({ owner, title, description, target, deadline, amountColle
 
         <div className="flex justify-between flex-wrap mt-[15px] gap-2">
           <div className="flex flex-col">
-            <h4 className="font-epilogue font-semibold text-[14px] text-[#b2b3bd] leading-[22px]">{amountCollected}</h4>
+            <h4 className="font-epilogue font-semibold text-[14px] text-[#b2b3bd] leading-[22px]">{amount}</h4>
             <p className="mt-[3px] font-epilogue font-normal text-[12px] leading-[18px] text-[#808191] sm:max-w-[120px] truncate">Expedted ETH</p>
           </div>
           <div className="flex flex-col">
@@ -33,7 +34,7 @@ const DisasterCard = ({ owner, title, description, target, deadline, amountColle
           <div className="w-[30px] h-[30px] rounded-full flex justify-center items-center bg-[#13131a]">
             <img src={thirdweb} alt="user" className="w-1/2 h-1/2 object-contain"/>
           </div>
-          <p className="flex-1 font-epilogue font-normal text-[12px] text-[#808191] truncate">by <span className="text-[#b2b3bd]">{owner}</span></p>
+          <p className="flex-1 font-epilogue font-normal text-[12px] text-[#808191] truncate">by <span className="text-[#b2b3bd]">{proposer_addr}</span></p>
         </div>
       </div>
     </div>

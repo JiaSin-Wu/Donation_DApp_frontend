@@ -1,6 +1,6 @@
 import { createCampaign, dashboard, logout, payment, profile, withdraw, vote } from '../assets';
-import contractAbi from '../abis/contract-abi.json';
-import contractAddress from '../abis/contract-address.json';
+import abi from '../contract/abi.json'
+import contractAddress from '../contract/address.json'
 
 export const navlinks = [
   {
@@ -67,4 +67,4 @@ export const navlinks = [
 ];
 
 export const DisasterResponseAddress = contractAddress.contractAddress;
-export const DisasterResponseABI = contractAbi;
+export const DisasterResponseABI = abi;
