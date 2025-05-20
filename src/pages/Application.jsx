@@ -2,37 +2,31 @@ import React from 'react';
 import '../styles/index.css';
 import '../styles/popup.css';
 import Select from 'react-select';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
+import { useStateContext } from '../context';
 
 // Get Pinata credentials from environment variables
 const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
 const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY;
 
 // Constants
-const GAS_FEE = 0.001;
 const VOTE_PERIOD_DAYS = 7;
 
 const ApplicationSubmit = () => {
-  const [disasterOptions, setDisasterOptions] = useState([
-    {value: '0', label: "earthquake"},
-    {value: '1', label: "volcano"},
-    {value: '2', label: "flood"},
-    {value: '3', label: "hurricane"},
-    {value: '4', label: "tornado"},
-    {value: '5', label: "tsunami"},
-  ]);
+  const { getDisasterList, submitDisasterProposal, address, connect } = useStateContext();
+  const [disasterOptions, setDisasterOptions] = useState([]);
 
-  const setDisasterList = (disasterList) => {
-    const formattedOptions = disasterList.map((disaster, index) => ({
-      value: index.toString(),
-      label: disaster.toLowerCase()
-    }));
-    setDisasterOptions(formattedOptions);
-  };
-  // Call the getDisasterList() here, eg. setDisasterList(getDisasterList());
+  useEffect(() => {
+    const fetchDisasters = async () => {
+      const disasters = await getDisasterList();
+      setDisasterOptions(disasters);
+    };
+    fetchDisasters();
+  }, [getDisasterList]);
+
   // Form data structure
   const [formData, setFormData] = useState({
     disaster: null,
@@ -41,9 +35,16 @@ const ApplicationSubmit = () => {
     description: '',
     previewIpfsHash: '',
     evidenceIpfsHash: '',
-    applicantAddress: "xxxxxx123xxxxxxx",
+    applicantAddress: address || "xxxxxx123xxxxxxx",
     submissionDate: new Date().toISOString(),
   });
+
+  // Update applicant address when wallet connects
+  useEffect(() => {
+    if (address) {
+      updateFormData('applicantAddress', address);
+    }
+  }, [address]);
 
   // Separate state for file handling
   const [fileData, setFileData] = useState({
@@ -80,7 +81,6 @@ const ApplicationSubmit = () => {
       evidenceIpfsHash: formData.evidenceIpfsHash,
       applicantAddress: formData.applicantAddress,
       submissionDate: formData.submissionDate,
-      gasFee: GAS_FEE,
       voteEndDate: voteEndDate.toISOString(),
     });
   }
@@ -261,19 +261,15 @@ const ApplicationSubmit = () => {
     }
 
     try {
-      // Prepare the data to be sent
-      const submissionData = {
-        disaster: formData.disaster,
-        title: formData.title,
-        amount: parseFloat(formData.amount),
-        description: formData.description,
-        previewIpfsHash: formData.previewIpfsHash,
-        evidenceIpfsHash: formData.evidenceIpfsHash,
-        applicantAddress: formData.applicantAddress,
-        submissionDate: formData.submissionDate,
-      };
+      // Update applicant address if not set
+      if (formData.applicantAddress === "xxxxxx123xxxxxxx" && address) {
+        updateFormData('applicantAddress', address);
+      }
 
-      // Call external function, eg.await submitApplication(submissionData)
+      // Submit the proposal to the smart contract
+      await submitDisasterProposal(formData);
+      
+      // Log the submission
       logging();
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -334,7 +330,7 @@ const ApplicationSubmit = () => {
             value={formData.title}
             onChange={e => updateFormData('title', e.target.value)}
             type="text"
-            className="bg-[#363951] text-white bg-white mt-1 w-full p-2 rounded"
+            className="bg-[#363951] text-white mt-1 w-full p-2 rounded"
           />
         </label>
       </div>
@@ -346,7 +342,7 @@ const ApplicationSubmit = () => {
             value={formData.amount}
             onChange={e => updateFormData('amount', e.target.value)}
             type="number"
-            className="bg-[#363951] text-white bg-white mt-1 w-full p-2 rounded"
+            className="bg-[#363951] text-white mt-1 w-full p-2 rounded"
           />
         </label>
       </div>
@@ -358,7 +354,7 @@ const ApplicationSubmit = () => {
             value={formData.description}
             onChange={e => updateFormData('description', e.target.value)}
             type="text"
-            className="bg-[#363951] text-white bg-white mt-1 w-full p-2 rounded"
+            className="bg-[#363951] text-white mt-1 w-full p-2 rounded"
           />
         </label>
       </div>
@@ -440,10 +436,6 @@ const ApplicationSubmit = () => {
                         <div className="flex justify-between">
                           <span className="text-gray-400">Amount</span>
                           <span className="font-medium">{formData.amount}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Gas Fee</span>
-                          <span className="font-medium">{GAS_FEE} ETH</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-400">Voting End Date</span>
