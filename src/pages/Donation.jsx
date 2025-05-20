@@ -1,43 +1,92 @@
 import { useEffect, useState } from 'react';
-import { Row, Col, Card, Container, Modal, Form, Button} from 'react-bootstrap';
+import { ethers } from "ethers";
+import abi from '../contract/abi.json'
+import contractAddress from '../contract/address.json'
 
 /*------------------------------------ variables ------------------------------------*/
-const TX_SUCCESS_CODE = 200;
+
+// error msg
+const NO_ETHEREUM_ERR = 'Please install MetaMask or another Web3 wallet';
+const LOGIN_FAIL_ERR = 'Please connect your wallet first';
+const TX_FAIL_ERR = 'Transaction failed';
+const NO_NUMBER_ERR = 'Please enter a valid donation amount';
+
+// status code
+const TX_SUCCESS_CODE = 1;
+const TX_FAIL_CODE = 0;
+
 
 /*------------------------------------ functions ------------------------------------*/
-const is_login = () => {
-    return true;
-}
-const get_accountAddress = async () => {
-
-    const accountAddress = '0x987654';
-    return Promise.resolve(accountAddress);
-}
 const get_disasterList = async () => {
-    const items = Array.from({ length: 12 }, (_, i) => ({
-            id: i,
-            title: `Donation ${i + 1}`,
-            donationAddress: `0x1234abcd...${i + 1}`,
-            image: 'https://media.istockphoto.com/id/1413100088/zh/%E5%90%91%E9%87%8F/koala-sitting-winking-cute-creative-kawaii-cartoon-mascot-logo.jpg?s=612x612&w=0&k=20&c=OTt5kJdzWSKgHiJX2cIN4UDIn0D5ai5d6QxY3doNMHU='
-        }))
-    return Promise.resolve(items);
+
+    if (window.ethereum) {
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(contractAddress, abi, signer);
+
+        const disasters = await contract.getOngoingDisaster();
+
+        const items = disasters.map((disaster) => ({
+            id: ethers.utils.formatEther(disaster.id),
+            title: disaster.name,
+            donationAddress: disaster.residualAddress,
+            image: `https://gateway.pinata.cloud/ipfs/${disaster.photoCid}`
+        }));
+        return items;
+    } else {
+
+        const items = [];
+        return items;
+    }
 };
 const donate = async (disaster_id, amount) => {
 
-    const accountAddress = await get_accountAddress();
-    console.log(`帳號${accountAddress}，已對災難${disaster_id}進行捐款$${amount}`);
-    const tx_status = 200;
-    const date = new Date().toLocaleDateString();
-    const tx_hash = '0x123456';
-    const gas_fee = 0.0001;
-    const result = {
-        _tx_status : tx_status,
-        _date : date,
-        _tx_hash : tx_hash,
-        _gas_fee : gas_fee
+    if (window.ethereum) {
+
+        try{
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const contract = new ethers.Contract(contractAddress, abi, signer);
+
+            // 2. 轉換 ETH 金額為 wei
+            const value = ethers.utils.parseEther(amount);
+
+            // 3. 呼叫 payable 函式
+            const tx = await contract.donate(disaster_id, { value });
+
+            // 4. 等待交易上鏈（成功與否會反映在 receipt.status）
+            const receipt = await tx.wait();
+
+            const gasUsed = receipt.gasUsed;
+            const effectiveGasPrice = receipt.effectiveGasPrice; // for EIP-1559
+            const gasFeeEth = ethers.utils.formatEther(gasUsed.mul(effectiveGasPrice));
+
+            const result = {
+                _tx_status : receipt.status === TX_SUCCESS_CODE,
+                _tx_hash : tx.hash,
+                _gas_fee : gasFeeEth
+            }
+            return result;
+        }catch(error){
+
+            const result = {
+                _tx_status : false,
+                _error_msg : TX_FAIL_ERR
+            }
+            return result;
+        }
+
+    } else {
+
+        const result = {
+            _tx_status : false,
+            _error_msg : NO_ETHEREUM_ERR
+        }
+        return result;
     }
-    return Promise.resolve(result);
 }
+
 
 /*------------------------------------ react dom ------------------------------------*/
 const Donation = () => {
@@ -49,20 +98,41 @@ const Donation = () => {
     const [showDonateSuccess, setShowDonateSuccess] = useState(false);
     const [errorModalMsg, setErrorModalMsg] = useState('');
     const [accountAddress, setAccountAddress] = useState('');
-    const [date, setDate] = useState(new Date().toLocaleDateString());
     const [txHash, setTxHash] = useState('');
     const [gasFee, setGasFee] = useState(0);
+
+    const checkEthereum = () => {
+
+        if (!window.ethereum)
+            setErrorModalMsg(NO_ETHEREUM_ERR);
+    }
+    const getWalletAddress = async () => {
+
+        if (window.ethereum) {
+
+            try {
+                // 要求用戶連接錢包
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+                // 返回第一個帳號（通常是使用者目前選取的帳號）
+                setAccountAddress(accounts[0]);
+                return 0;
+            } catch (error) {
+
+                setErrorModalMsg(LOGIN_FAIL_ERR);
+                return -1;
+            }
+        } else {
+            setErrorModalMsg(NO_ETHEREUM_ERR);
+            return -1;
+        }
+    }
 
     const initialize_items = async () => {
 
         const data = await get_disasterList();
         setItems(data);
     };
-    const initialize_accountAddress = async () => {
-
-        const aa = await get_accountAddress();
-        setAccountAddress(aa);
-    }
 
     const handleAmountChange = (id, value) => {
         setAmounts((other) => ({
@@ -73,17 +143,18 @@ const Donation = () => {
 
     const currentItem = items.find((item) => item.id === donateModalId);
 
-    const handleDonateButtonClick = (item) => {
+    const handleDonateButtonClick = async (item) => {
 
-        if (!is_login()) {
-            setErrorModalMsg('請先登入才能捐款');
-            return;
+        if (accountAddress === '') {
+            const login = await getWalletAddress();
+            if(login < 0)
+                return;
         }
 
         const inputAmount = amounts[item.id];
 
         if (!inputAmount || parseFloat(inputAmount) <= 0) {
-            setErrorModalMsg('請輸入有效的捐款金額');
+            setErrorModalMsg(NO_NUMBER_ERR);
             return;
         }
 
@@ -99,140 +170,133 @@ const Donation = () => {
         const amount = amounts[currentItem.id];
         const tx_result = await donate(disaster_id, amount);
 
-        if (tx_result._tx_status === TX_SUCCESS_CODE){
-            setDate(tx_result._date);
+        if (tx_result._tx_status){
             setTxHash(tx_result._tx_hash);
             setGasFee(tx_result._gas_fee);
             setShowDonateSuccess(true);
         }else{
-            setErrorModalMsg('交易失敗，系統維修中');
+            setErrorModalMsg(tx_result._error_msg);
         }
     };
 
 
     useEffect(() => {
+        checkEthereum();
         initialize_items();
-        initialize_accountAddress();
     }, []);
 
     return (
-        <Container>
-            <h1 style={{fontSize: 50, color: 'white'}}>Donation</h1>
-            <Row className="mt-4">
+        <div className="p-6">
+            <h1 className="text-6xl text-white mb-6">Donation</h1>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {items.map((item) => (
-                    <Col key={item.id} xs={12} sm={6} md={4} className="mb-4">
-                        <Card>
-                            <Card.Body className="text-center">
-                                <Card.Title className="fw-bold fs-2">{item.title}</Card.Title>
-                            </Card.Body>
-                            <Card.Img variant="top" src={item.image} style={{ height: '200px', objectFit: 'contain' }} />
-                            <Card.Body className="d-flex flex-column justify-content-between">
-                                <div className="text-center">
-                                    <Card.Text>
-                                        <strong>捐款地址：</strong> {item.donationAddress}
-                                    </Card.Text>
+                    <div key={item.id} className="bg-white rounded-lg shadow p-4 flex flex-col">
+                        <h2 className="text-center font-bold text-4xl mb-4">{item.title}</h2>
+                        <img
+                            src={item.image}
+                            alt={item.title}
+                            className="h-48 object-contain mb-4"
+                        />
+                        <div className="p-4 flex flex-col gap-4 items-center">
+                            <div className="flex justify-center">
+                                <div className="w-full max-w-xs text-left space-y-3">
+                                    {/* 捐款地址 */}
+                                    <div className="mb-2">
+                                        <strong>Donation Address : </strong>
+                                        <div className="break-all ml-4 text-center">{item.donationAddress}</div>
+                                    </div>
 
-                                    <div className="d-flex justify-content-center align-items-center gap-2 mb-2 mt-2">
-                                        <strong>捐款金額：</strong>
-                                        <Form.Control
+                                    {/* 捐款金額 */}
+                                    <div className="mb-2">
+                                        <strong>Donation Amount : </strong>
+                                        <input
                                             type="number"
                                             placeholder="輸入金額"
                                             step="0.001"
-                                            style={{ width: '120px' }}
+                                            className="border border-gray-300 rounded px-2 py-1 w-32 mt-2"
                                             value={amounts[item.id] || ''}
                                             onChange={(e) => handleAmountChange(item.id, e.target.value)}
                                         />
+                                        &nbsp;ETH
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                {/* 右下角捐款按鈕 */}
-                                <div className="d-flex justify-content-end">
-                                    <Button variant="primary" onClick={() => handleDonateButtonClick(item)}>捐款</Button>
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
+                        <div className="mt-auto text-right">
+                            <button
+                                onClick={() => handleDonateButtonClick(item)}
+                                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                            >
+                                Donate
+                            </button>
+                        </div>
+                    </div>
                 ))}
-            </Row>
-
-            {/* 捐款 彈出視窗 */}
-            <div className="isolate relative z-50">
-                <Modal show={showDonate} onHide={() => setShowDonate(false)} centered>
-                    <Modal.Header closeButton>
-                        <Modal.Title>確定捐款嗎？</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body className="text-center">
-                        {currentItem && (
-                            <>
-                                <h5 className="mb-3 fw-bold fs-2">{currentItem.title}</h5>
-                                <img
-                                    src={currentItem.image}
-                                    alt={currentItem.title}
-                                    className="img-fluid mb-3"
-                                />
-                                <div className="text-start">
-                                    <p><strong>捐款地址:</strong> {currentItem.donationAddress}</p>
-                                    <p><strong>錢包地址:</strong> {accountAddress}</p>
-                                    <p><strong>捐款金額:</strong> ${amounts[currentItem.id]}</p>
-                                    <p><strong>捐款日期:</strong> {new Date().toLocaleDateString()}</p>
-                                </div>
-                            </>
-                        )}
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={() => setShowDonate(false)}>
-                            取消
-                        </Button>
-                        <Button variant="success" onClick={() => {setShowDonate(false);handleDonate()}}>
-                            確認捐款
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
             </div>
 
-            {/* 捐款成功 彈出視窗 */}
-            <Modal show={showDonateSuccess} onHide={() => setShowDonateSuccess(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>捐款成功</Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="text-center">
-                    {currentItem && (
-                        <>
-                            <h5 className="mb-3 fw-bold fs-2">{currentItem.title}</h5>
-                            <img
-                                src={currentItem.image}
-                                alt={currentItem.title}
-                                className="img-fluid mb-3"
-                            />
-                            <div className="text-start">
-                                <p><strong>捐款地址:</strong> {currentItem.donationAddress}</p>
-                                <p><strong>錢包地址:</strong> {accountAddress}</p>
-                                <p><strong>捐款金額:</strong> ${amounts[currentItem.id]}</p>
-                                <p><strong>捐款日期:</strong> {date}</p>
-                                <p><strong>交易 hash:</strong> {txHash}</p>
-                                <p><strong>gas fee:</strong> {gasFee}</p>
+            {/* 捐款確認彈窗 */}
+            {showDonate && currentItem && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded-lg max-w-md w-full">
+                        <div className="flex justify-between items-center mb-5">
+                            <h2 className="text-2xl font-bold">Are you sure you want to donate?</h2>
+                            <button onClick={() => setShowDonate(false)}>✕</button>
+                        </div>
+
+                        <div className="text-center">
+                            <h5 className="mb-4 font-bold text-4xl">{currentItem.title}</h5>
+                            <img src={currentItem.image} alt={currentItem.title} className="mb-4 max-h-48 mx-auto" />
+                            <div className="text-left text-base">
+                                <p><strong>Donation Address : </strong> {currentItem.donationAddress}</p>
+                                <p><strong>Wallet Address : </strong> {accountAddress}</p>
+                                <p><strong>Donation Amount :</strong> ${amounts[currentItem.id]} ETH</p>
                             </div>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => {setShowDonateSuccess(false);setDonateModalId(null)}}>
-                        關閉
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                        </div>
+                        <div className="flex justify-end gap-2 mt-4">
+                            <button onClick={() => setShowDonate(false)} className="px-4 py-2 border rounded">Cancel</button>
+                            <button onClick={() => { setShowDonate(false); handleDonate(); }} className="px-4 py-2 bg-green-600 text-white rounded">Confirm Donation</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
+            {/* 捐款成功彈窗 */}
+            {showDonateSuccess && currentItem && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded-lg max-w-md w-full">
+                        <div className="flex justify-between items-center mb-5">
+                            <h2 className="text-2xl font-bold">Donation Successful</h2>
+                            <button onClick={() => { setShowDonateSuccess(false); setDonateModalId(null); }}>✕</button>
+                        </div>
+                        <div className="text-center">
+                            <h5 className="mb-4 font-bold text-4xl">{currentItem.title}</h5>
+                            <img src={currentItem.image} alt={currentItem.title} className="mb-4 max-h-48 mx-auto" />
+                            <div className="text-left text-base">
+                                <p><strong>Donation Address : </strong> {currentItem.donationAddress}</p>
+                                <p><strong>Wallet Address : </strong> {accountAddress}</p>
+                                <p><strong>Donation Amount : </strong> ${amounts[currentItem.id]} ETH</p>
+                                <p><strong>Transaction Hash : </strong> {txHash}</p>
+                                <p><strong>gas fee : </strong> {gasFee}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            {/* Error彈出視窗 */}
-            <Modal show={!!errorModalMsg} onHide={() => setErrorModalMsg('')} centered>
-                <Modal.Body>{errorModalMsg}</Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setErrorModalMsg('')}>
-                        關閉
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </Container>
+            {/* 錯誤彈窗 */}
+            {!!errorModalMsg && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-4 rounded max-w-sm w-full">
+                        <p className='text-lg'>{errorModalMsg}</p>
+                        <div className="flex justify-end mt-4">
+                            <button onClick={() => setErrorModalMsg('')} className="px-4 py-2 border rounded">Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+
     )
 }
 

@@ -1,31 +1,38 @@
 import { useEffect, useState } from 'react';
-import { Row, Col, Card, Container, Modal, Button} from 'react-bootstrap';
+import { ethers } from "ethers";
+import abi from '../contract/abi.json'
+import contractAddress from '../contract/address.json'
 
 /*------------------------------------ variables ------------------------------------*/
 
-/*------------------------------------ functions ------------------------------------*/
-const is_login = () => {
-    return true;
-}
-const get_accountAddress = async () => {
+const NO_ETHEREUM_ERR = 'Please install MetaMask or another Web3 wallet';
 
-    const accountAddress = '0x987654';
-    return Promise.resolve(accountAddress);
-}
+/*------------------------------------ functions ------------------------------------*/
+
 const get_myDonations = async () => {
 
-    const accountAddress = await get_accountAddress();
-    console.log(`查詢帳號${accountAddress}捐款紀錄`);
-    const items = Array.from({ length: 12 }, (_, i) => ({
-            id: i,
-            title: `Donation ${i + 1}`,
-            donationAddress: `0x1234abcd...${i + 1}`,
-            image: 'https://media.istockphoto.com/id/1413100088/zh/%E5%90%91%E9%87%8F/koala-sitting-winking-cute-creative-kawaii-cartoon-mascot-logo.jpg?s=612x612&w=0&k=20&c=OTt5kJdzWSKgHiJX2cIN4UDIn0D5ai5d6QxY3doNMHU=',
-            totalAmount : 10,
-            dates : ['2025/05/12', '2025/05/13', '2025/05/14'],
-            votePer : 0.75512
-        }))
-    return Promise.resolve(items);
+    if (window.ethereum) {
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(contractAddress, abi, signer);
+
+        const donations = await contract.getMyDonations();
+
+        const items = donations.map((donation) => ({
+            id: ethers.utils.formatEther(donation.disasterId),
+            title: donation.name,
+            donationAddress: donation.donateAddress,
+            image: `https://gateway.pinata.cloud/ipfs/${donation.photoCid}`,
+            totalAmount : ethers.utils.formatEther(donation.total_amount),
+            votePer : ethers.utils.formatEther(donation.vote_per)
+        }));
+        return items;
+    } else {
+
+        const items = [];
+        return items;
+    }
 };
 
 
@@ -35,6 +42,12 @@ const DonationLookup = () => {
     const [items, setItems] = useState([]);
     const [errorModalMsg, setErrorModalMsg] = useState('');
 
+    const checkEthereum = () => {
+
+        if (!window.ethereum)
+            setErrorModalMsg(NO_ETHEREUM_ERR);
+    }
+
     const initialize_items = async () => {
 
         const data = await get_myDonations();
@@ -42,64 +55,65 @@ const DonationLookup = () => {
     };
 
     useEffect(() => {
+        checkEthereum();
         initialize_items();
     }, []);
 
     return (
-        <Container>
-            <h1 style={{fontSize: 50, color: 'white'}}>Donation Record</h1>
-            <Row className="mt-4">
+        <div className="container mx-auto px-4 py-6">
+            <h1 className="text-6xl text-white mb-6">My Donation</h1>
+
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {items.map((item) => (
-                    <Col key={item.id} xs={12} sm={6} md={4} className="mb-4">
-                        <Card>
-                            <Card.Body className="text-center">
-                                <Card.Title className="fw-bold fs-2">{item.title}</Card.Title>
-                            </Card.Body>
-                            <Card.Img variant="top" src={item.image} style={{ height: '200px', objectFit: 'contain' }} />
-                            <Card.Body className="d-flex flex-column justify-content-between">
-                                <div style={{ display: "flex", justifyContent: "center" }}>
-                                    <div style={{ textAlign: "left" }}>
-                                        <Card.Text style={{ display: "flex" }}>
-                                            <strong style={{ width: "6em" }}>捐款地址：</strong> {item.donationAddress}
-                                        </Card.Text>
 
-                                        <Card.Text style={{ display: "flex" }}>
-                                            <strong style={{ width: "6em" }}>捐款金額：</strong> ${item.totalAmount}
-                                        </Card.Text>
+                    <div key={item.id} className="bg-white rounded-lg shadow p-4 flex flex-col">
+                        <h2 className="text-center font-bold text-4xl mb-4">{item.title}</h2>
+                        <img
+                            src={item.image}
+                            alt={item.title}
+                            className="h-48 object-contain mb-4"
+                        />
+                        <div className="p-4 flex flex-col gap-4 items-center">
+                            <div className="flex justify-center">
+                                <div className="w-full max-w-xs text-left space-y-3">
+                                    {/* 捐款地址 */}
+                                    <div className="mb-2">
+                                        <strong>Donation Address : </strong>
+                                        <div className="break-all ml-4 text-center">{item.donationAddress}</div>
+                                    </div>
 
-                                        <Card.Text style={{ display: "flex", alignItems: "start" }}>
-                                            <strong style={{ width: "6em" }}>捐款時間：</strong>
-                                            <div>
-                                                {item.dates[0]}
-                                                <ul>
-                                                    {item.dates.slice(1).map((date, idx) => (
-                                                        <li key={idx}>{date}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </Card.Text>
+                                    {/* 捐款金額 */}
+                                    <div className="mb-2">
+                                        <strong>Donation Amount : </strong>
+                                        <div className="break-all ml-4 text-center">${item.totalAmount} ETH</div>
+                                    </div>
 
-                                        <Card.Text style={{ display: "flex" }}>
-                                            <strong style={{ width: "6em" }}>投票份額：</strong> {item.votePer * 100}%
-                                        </Card.Text>
+                                    {/* 投票份額 */}
+                                    <div className="mb-2">
+                                        <strong>Voting Power : </strong>
+                                        <div className="break-all ml-4 text-center">{item.votePer}</div>
                                     </div>
                                 </div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
+                            </div>
+                        </div>
+                    </div>
                 ))}
-            </Row>
+            </div>
 
-            {/* Error彈出視窗 */}
-            <Modal show={!!errorModalMsg} onHide={() => setErrorModalMsg('')} centered>
-                <Modal.Body>{errorModalMsg}</Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setErrorModalMsg('')}>
-                        關閉
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </Container>
+            {/* 錯誤彈窗 */}
+            {!!errorModalMsg && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-4 rounded max-w-sm w-full">
+                        <p className='text-lg'>{errorModalMsg}</p>
+                        <div className="flex justify-end mt-4">
+                            <button onClick={() => setErrorModalMsg('')} className="px-4 py-2 border rounded">Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+
     )
 }
 
