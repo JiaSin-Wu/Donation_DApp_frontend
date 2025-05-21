@@ -3,31 +3,46 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Dropdown from './Dropdown';
 import { toast } from 'react-toastify';
 import { useStateContext } from '../context';
+import { useParams } from 'react-router-dom';
 
 const ProposalStructure = ({ children }) => {
+    const { id } = useParams();
     const containerRef = useRef();
-    const [position, setPosition] = useState({
+       const [position, setPosition] = useState({
         left: 0,
         top: 0,
         height: 0,
         width: 0,
     });
-    const { address } = useStateContext();
+    const { address , proposalVoting} = useStateContext();
+
+
+    const [voteLoading, setVoteLoading] = useState(false);
     const [showActionButtons, setShowActionButtons] = useState(false);
-    const handleAction = (action) => {
+    const [displayType, setDisplayType] = useState('active');
+
+    const handleAction = async (action) => {
       if (!address) {
         alert("Please connect your wallet first.");
         return;
       }
-
-      // 如果已登入，執行支援或拒絕的邏輯
-      if (action === "support") {
-        // doSupport()
-      } else if (action === "reject") {
-        // doReject()
+      if (!id) {
+        toast.error("Invalid proposal ID.");
+        return;
       }
-    };
 
+      setVoteLoading(true);
+      try {
+        if (action === "support") {
+          await proposalVoting(id, true);
+        } else if (action === "reject") {
+          await proposalVoting(id, false);
+        }
+      } catch (e) {
+        alert("proposal voting has some problem")
+      }
+      setVoteLoading(false);
+    };
 
 
     useEffect(() => {
@@ -61,14 +76,7 @@ const ProposalStructure = ({ children }) => {
 
     return (
         <div className="bg-[#121212] text-white min-h-screen">
-            <div className="mb-6">
-                <Dropdown
-                    label="Disaster Category"
-                    options={['', 'California Wildfire', 'Earthquake', 'Nuclear power plant explosion']}
-                    selectedValue= ""
-                    onChange={() => {}}                
-                />
-            </div>
+            
             {/* 左箭頭 */}
             <button
                 className="fixed transform -translate-y-1/2 p-3 bg-white/20 hover:bg-white/30 rounded-full z-50"

@@ -142,9 +142,14 @@ export const StateContextProvider = ({ children }) => {
     //proposal投票用
     const getDetailedProposal = async(proposalId) =>{
         const p = await contract.call("proposals", [proposalId]);
-        return {
+        const disasterId = p[1].toString();
+        const d = await contract.call("disasters", [disasterId]);
+        const s = await contract.call("getProposalDetails", [proposalId]);
+             
+        const result =  {
                 propodal_id: proposalId.toString(),
-                disasterId: p[1].toString(),
+                disasterId: disasterId,
+                disasterName: d[1],
                 title: p[2],
                 photoCid: p[3],
                 description: p[4],
@@ -152,29 +157,67 @@ export const StateContextProvider = ({ children }) => {
                 amount: p[6].toString(),
                 proposer_addr: p[7],
                 approved: p[8],
-                approveVotes: p[9].toString(),
-                rejectVotes: p[10].toString(),
+                totalVotes: s[8].total_avail_count.toNumber(),             
+                approveVotes: p[9].toNumber(),
+                rejectVotes: p[10].toNumber(),
                 dueDate : p[11].toNumber(),
               }; 
+        console.log("s[8] = ", result);
+        return result;
+
+    }
+    //Finalize
+    const finalize = async(proposalId) =>{
+        const confirm = window.confirm("Are you sure you want to finalize? Funds will be sent to the proposer.");
+          if (!confirm) {
+            return;
+          }
+        try {
+            const tx = await contract.call("finalizeProposal", [proposalId]);
+            alert("✅ Finalized successfully! ETH is being transferred to the target account.");
+        } catch (err) {
+            // 分析錯誤訊息內容
+            const message = err?.message || "";
+            
+            if (message.includes("Already approved")) {
+              alert("❌ Already approved");
+            } else if (message.includes("Not enough votes")) {
+              alert("❌ Not enough votes");
+            } else if (message.includes("Insufficient funds")) {
+              alert("❌ Insufficient funds");
+            } else {
+              console.error("Finalize 發生未知錯誤：", err);
+              alert("❌ System error. Try later!");
+            }
+          }
     }
 
-    const getUserCampaigns = async () => {
-    const allCampaigns = await getCampaigns();
-
-    const filteredCampaigns = allCampaigns.filter((campaign) => campaign.owner === address);
-
-    return filteredCampaigns;
-  }
-
-  const donate = async (pId, amount) => {
-    try{
-      const data = await contract.call('donateToCampaign', [pId], { value: ethers.utils.parseEther(amount)});
-      toast.success('Campaign funded successfully. Thansk for your collaboration');
-      return data;
-    } catch (err) {
-      console.log("Error occured while making donation", err);
+    //Vote Proposal 
+     const proposalVoting = async(proposalId, approve) =>{
+        try {
+            const tx = await contract.call("voteProposal", [proposalId, approve]);
+            toast.success("Vote submitted successfully!");           
+        } catch (error) {
+            const reason = error.reason || error.message || "";
+            if (reason.includes("Voting period ended")) {
+              toast.error("Voting period has ended.");
+            } else if (reason.includes("Already voted")) {
+              toast.error("You have already voted on this proposal.");
+            } else if (reason.includes("No voting power for this disaster")) {
+              toast.error("You have no voting power for this disaster.");
+            } else {
+              toast.error("An unexpected error occurred.");
+            }
+          } 
     }
-  }
+    const nextProposalId = async(proposalId, disasterId, status) =>{
+    }
+
+    const prevProposalId = async(proposalId, disasterId, status) =>{
+    }
+
+
+
 
   const payOutToCampaignTeam = async (pId) => {
     try {
@@ -211,8 +254,6 @@ export const StateContextProvider = ({ children }) => {
         connect,
         createCampaign: publishCampaign,
         getCampaigns,
-        getUserCampaigns,
-        donate,
         getDonations,
         payOutToCampaignTeam,
         updateCampaign,
@@ -220,6 +261,10 @@ export const StateContextProvider = ({ children }) => {
         getDisaster: getDisasters,
         getProposals,
         getDetailedProposal,
+        finalize,
+        proposalVoting,
+        nextProposalId,
+        prevProposalId
       }}
     >
       <ToastContainer />
