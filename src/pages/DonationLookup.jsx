@@ -20,7 +20,7 @@ const get_myDonations = async () => {
         const donations = await contract.getMyDonations();
 
         const items = donations.map((donation) => ({
-            id: ethers.utils.formatEther(donation.disasterId),
+            id: donation.disasterId,
             title: donation.name,
             donationAddress: donation.donateAddress,
             image: `https://gateway.pinata.cloud/ipfs/${donation.photoCid}`,
