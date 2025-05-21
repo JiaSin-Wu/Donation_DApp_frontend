@@ -203,6 +203,53 @@ export const StateContextProvider = ({ children }) => {
     return parsedDonations;
   }
 
+  const getDisasterList = async () => {
+    try {
+      const result = await contract.call('getDisasterList');
+      console.log('Raw disaster list:', result);
+      
+      // Format the list for the Select component
+      const formattedList = result.map((disaster, index) => ({
+        value: index.toString(), // Use index as value
+        label: disaster[1], // Use the disaster name as label
+        id: disaster[0].toString(), // Keep the original ID
+        image: disaster[2], // Keep the image CID
+        // Add other fields if needed
+      }));
+
+      return {
+        id: result.length,
+        list: formattedList
+      };
+    } catch (error) {
+      console.error('Error fetching disaster list:', error);
+      return { id: 0, list: [] };
+    }
+  };
+
+  const submitDisasterProposal = async (form) => {
+    try {
+      console.log('Submitting proposal with form data:', form);
+      
+      const data = await contract.call('submitProposal', [
+        form.disaster.id, // disasterId
+        form.title, // title
+        ethers.utils.parseEther(form.amount), // amount
+        form.description, // description
+        form.previewIpfsHash, // photoCid
+        form.evidenceIpfsHash, // proofCid
+      ]);
+
+      toast.success('Proposal submitted successfully!');
+      console.log('Proposal submission success:', data);
+      return data;
+    } catch (error) {
+      toast.error('Error submitting proposal. Please try again.');
+      console.error('Error submitting proposal:', error);
+      throw error;
+    }
+  };
+
   return (
     <StateContext.Provider
       value={{ 
@@ -220,6 +267,8 @@ export const StateContextProvider = ({ children }) => {
         getDisaster: getDisasters,
         getProposals,
         getDetailedProposal,
+        getDisasterList,
+        submitDisasterProposal
       }}
     >
       <ToastContainer />

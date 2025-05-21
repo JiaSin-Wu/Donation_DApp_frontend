@@ -21,8 +21,12 @@ const ApplicationSubmit = () => {
 
   useEffect(() => {
     const fetchDisasters = async () => {
-      const disasters = await getDisasterList();
-      setDisasterOptions(disasters);
+      const result = await getDisasterList();
+      console.log('Disaster List Response:', result);
+      const { id, list } = result;
+      console.log('Disaster ID:', id);
+      console.log('Disaster List:', list);
+      setDisasterOptions(list);
     };
     fetchDisasters();
   }, [getDisasterList]);
@@ -237,12 +241,17 @@ const ApplicationSubmit = () => {
   const validateForm = () => {
     const missingFields = [];
     
+    if (!address) {
+      missingFields.push('Please connect your wallet first');
+    }
     if (!formData.disaster) missingFields.push('Disaster Type');
     if (!formData.title) missingFields.push('Title');
     if (!formData.amount) missingFields.push('Amount');
     if (!formData.description) missingFields.push('Description');
     if (!fileData.previewFile) missingFields.push('Preview Image/Video');
     if (!fileData.evidenceFile) missingFields.push('Evidence');
+    if (!formData.previewIpfsHash) missingFields.push('Please upload Preview Image/Video to IPFS');
+    if (!formData.evidenceIpfsHash) missingFields.push('Please upload Evidence to IPFS');
     
     return missingFields;
   };
@@ -278,6 +287,18 @@ const ApplicationSubmit = () => {
 
   return (
     <div className="text-white p-6 space-y-6">
+      {!address && (
+        <div className="bg-yellow-500 text-white p-4 rounded-lg mb-4">
+          Please connect your wallet to submit a proposal
+          <button 
+            onClick={connect} 
+            className="ml-4 bg-white text-yellow-500 px-4 py-2 rounded-lg hover:bg-gray-100"
+          >
+            Connect Wallet
+          </button>
+        </div>
+      )}
+
       <div className="space-y-2">
         <label className="text-white block">Disaster: 
           <Select 
@@ -285,12 +306,14 @@ const ApplicationSubmit = () => {
             value={formData.disaster}
             onChange={(disaster) => updateFormData('disaster', disaster)} 
             className="mt-1 w-full"
+            isDisabled={!address}
             styles={{
               control: (base) => ({
                 ...base,
                 backgroundColor: "#363951",
                 color: "#ffffff",
                 borderColor: "#4b4e6d",
+                opacity: !address ? 0.5 : 1,
               }),
               singleValue: (base) => ({
                 ...base,
@@ -322,7 +345,6 @@ const ApplicationSubmit = () => {
         </label>
       </div>
 
-
       <div className="space-y-2">
         <label className="text-white block">
           Application Title: 
@@ -331,6 +353,7 @@ const ApplicationSubmit = () => {
             onChange={e => updateFormData('title', e.target.value)}
             type="text"
             className="bg-[#363951] text-white mt-1 w-full p-2 rounded"
+            disabled={!address}
           />
         </label>
       </div>
@@ -343,6 +366,7 @@ const ApplicationSubmit = () => {
             onChange={e => updateFormData('amount', e.target.value)}
             type="number"
             className="bg-[#363951] text-white mt-1 w-full p-2 rounded"
+            disabled={!address}
           />
         </label>
       </div>
@@ -355,14 +379,26 @@ const ApplicationSubmit = () => {
             onChange={e => updateFormData('description', e.target.value)}
             type="text"
             className="bg-[#363951] text-white mt-1 w-full p-2 rounded"
+            disabled={!address}
           />
         </label>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <input type="file" onChange={onPreviewFileChange} className="text-white"/>
-          <button onClick={onPreviewUpload} className="bg-[#8c6dfd] text-white px-4 py-2 rounded-lg">Upload</button>
+          <input 
+            type="file" 
+            onChange={onPreviewFileChange} 
+            className="text-white"
+            disabled={!address}
+          />
+          <button 
+            onClick={onPreviewUpload} 
+            className="bg-[#8c6dfd] text-white px-4 py-2 rounded-lg"
+            disabled={!address || !fileData.previewFile}
+          >
+            Upload
+          </button>
           <br />
           <label className="text-white">Please upload your preview media ( jpg, png, mp4 ... ) here</label>
           <div className="bg-[#5d5f6f] text-black">
@@ -371,8 +407,19 @@ const ApplicationSubmit = () => {
         </div>
 
         <div className="space-y-2">
-          <input type="file" onChange={onEvidenceFileChange} className="text-white" />
-          <button onClick={onEvidenceUpload} className="bg-[#8c6dfd] text-white px-4 py-2 rounded-lg">Upload</button>
+          <input 
+            type="file" 
+            onChange={onEvidenceFileChange} 
+            className="text-white"
+            disabled={!address}
+          />
+          <button 
+            onClick={onEvidenceUpload} 
+            className="bg-[#8c6dfd] text-white px-4 py-2 rounded-lg"
+            disabled={!address || !fileData.evidenceFile}
+          >
+            Upload
+          </button>
           <br />
           <label className="text-white">Please upload your evidence ( zip, 7z ... ) here</label>
           <div className="bg-[#5d5f6f] text-black">
@@ -383,7 +430,14 @@ const ApplicationSubmit = () => {
 
       <div className="mt-6">
         <Popup
-          trigger={<button className="button bg-[#8c6dfd] text-white px-4 py-2 rounded-lg"> Submit </button>}
+          trigger={
+            <button 
+              className="button bg-[#8c6dfd] text-white px-4 py-2 rounded-lg"
+              disabled={!address}
+            > 
+              Submit 
+            </button>
+          }
           modal
           nested
           overlayClassName="popup-overlay"
