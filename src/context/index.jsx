@@ -309,7 +309,7 @@ export const StateContextProvider = ({ children }) => {
         getProposals,
         getDetailedProposal,
         getDisasterList,
-        submitDisasterProposal,s
+        submitDisasterProposal,
       }}
     >
       <ToastContainer />
