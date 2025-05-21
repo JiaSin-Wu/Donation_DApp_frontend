@@ -217,8 +217,7 @@ const AddDisaster = () => {
       `災難名稱：${form.name}\n` +
       `描述：${form.description}\n` +
       `質押金額：${STAKE_AMOUNT} ETH\n` +
-      `募款錢包地址：${form.walletAddress}\n` +
-      `投票截止時間：${voteDeadlineString}\n\n` +
+      `剩餘資金接收地址：${form.walletAddress}\n\n` +
       `是否送出？`
     );
 
@@ -227,36 +226,36 @@ const AddDisaster = () => {
     setIsLoading(true);
 
     try {
-      // 準備合約調用參數
-      const contractParams = {
-        owner: address,
-        title: form.name,
-        description: form.description,
-        target: ethers.utils.parseUnits(STAKE_AMOUNT.toString(), 18),
-        deadline: deadlineTimestamp,
-        image: form.imageIpfsHash
-      };
+      // Convert stake amount to Wei (0.01 ETH = 10^16 Wei)
+      const stakeAmountWei = ethers.utils.parseEther(STAKE_AMOUNT.toString());
 
       console.log('Contract address:', DisasterResponseAddress);
       console.log('Contract ABI:', DisasterResponseABI);
       console.log('Account:', address);
-      console.log('Submitting disaster request:', contractParams);
+      console.log('Submitting disaster request:', {
+        title: form.name,
+        photoCid: form.imageIpfsHash,
+        description: form.description,
+        residualAddress: form.walletAddress,
+        stakeAmount: stakeAmountWei.toString()
+      });
 
-      // 調用智能合約
-      const tx = await contract.call('createCampaign', [
-        contractParams.owner,
-        contractParams.title,
-        contractParams.description,
-        contractParams.target,
-        contractParams.deadline,
-        contractParams.image
-      ]);
+      // Call the addRequest function with the correct parameters and value
+      const tx = await contract.call('addRequest', [
+        form.name,
+        form.imageIpfsHash,
+        form.description,
+        form.walletAddress
+      ], {
+        value: stakeAmountWei, // Send 0.01 ETH with the transaction
+        gasLimit: 500000 // Add explicit gas limit
+      });
 
-      console.log('Transaction sent:', tx.hash);
+      console.log('Transaction sent:', tx.receipt.transactionHash);
       alert('交易已發送，等待確認...');
       
-      // 等待交易確認
-      const receipt = await tx.wait();
+      // Wait for transaction confirmation using ThirdWeb's method
+      const receipt = await tx.receipt;
       console.log('Transaction confirmed:', receipt);
 
       alert('災難請求已成功提交！');
@@ -264,7 +263,17 @@ const AddDisaster = () => {
       navigate('/');
     } catch (error) {
       console.error('Error submitting disaster request:', error);
-      alert('提交失敗：' + (error.message || '未知錯誤'));
+      let errorMessage = '提交失敗：';
+      
+      if (error.message.includes('Must stake 0.01 ETH')) {
+        errorMessage += '質押金額必須為 0.01 ETH';
+      } else if (error.message.includes('insufficient funds')) {
+        errorMessage += '錢包餘額不足';
+      } else {
+        errorMessage += error.message || '未知錯誤';
+      }
+      
+      alert(errorMessage);
       setIsLoading(false);
     }
   };
