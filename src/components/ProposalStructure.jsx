@@ -5,8 +5,7 @@ import { toast } from 'react-toastify';
 import { useStateContext } from '../context';
 import { useParams } from 'react-router-dom';
 
-const ProposalStructure = ({ children }) => {
-    const { id } = useParams();
+const ProposalStructure = ({id, children }) => {
     const containerRef = useRef();
        const [position, setPosition] = useState({
         left: 0,
@@ -19,7 +18,7 @@ const ProposalStructure = ({ children }) => {
 
     const [voteLoading, setVoteLoading] = useState(false);
     const [showActionButtons, setShowActionButtons] = useState(false);
-    const [displayType, setDisplayType] = useState('active');
+    
 
     const handleAction = async (action) => {
       if (!address) {
@@ -77,28 +76,7 @@ const ProposalStructure = ({ children }) => {
     return (
         <div className="bg-[#121212] text-white min-h-screen">
             
-            {/* 左箭頭 */}
-            <button
-                className="fixed transform -translate-y-1/2 p-3 bg-white/20 hover:bg-white/30 rounded-full z-50"
-                style={{
-                    top: position.top + innerHeight / 3,
-                    left: Math.max(position.left - 40, 8),
-                }}
-            >
-                <ChevronLeft size={24} />
-            </button>
-
-            {/* 右箭頭 */}
-            <button
-                className="fixed transform -translate-y-1/2 p-3 bg-white/20 hover:bg-white/30 rounded-full z-50"
-                style={{
-                    top: position.top + innerHeight / 3,
-                    left: Math.min(position.left + position.width + 8, window.innerWidth - 48),
-                }}
-            >
-                <ChevronRight size={24} />
-            </button>
-
+           
             {/* Support / Reject 按鈕：容器正下方中央 */}
             {showActionButtons && (
                 <div

@@ -108,14 +108,15 @@ export const StateContextProvider = ({ children }) => {
         let proposalIds;
         if (status == "Ongoing"){
             proposalIds = await contract.call("getOngoingProposal", [disasterId]);
-        }
+        } 
         else if(status == "Votable"){
-            proposalIds = await contract.call("getVotableDisaster", [disasterId] )
+           proposalIds = await contract.call("getUnvoteProposal", [disasterId]);
         }
         else if( status == "Voted"){
             proposalIds = await contract.call("getVotedProposal", [disasterId])
         }
 
+        console.log("proposalIds:", proposalIds)
         if (!proposalIds || proposalIds.length === 0) {
             return [];
         }
@@ -129,7 +130,7 @@ export const StateContextProvider = ({ children }) => {
                 title: p[2],
                 photoCid: p[3],
                 description: p[4],
-                amount: p[6].toString(),
+                amount: ethers.utils.formatEther(p[6].toString()),
                 proposer_addr: p[7],
                 dueDate : p[11].toNumber()
               };
@@ -144,7 +145,7 @@ export const StateContextProvider = ({ children }) => {
         const p = await contract.call("proposals", [proposalId]);
         const disasterId = p[1].toString();
         const d = await contract.call("disasters", [disasterId]);
-        const s = await contract.call("getProposalDetails", [proposalId]);
+   
              
         const result =  {
                 propodal_id: proposalId.toString(),
@@ -154,10 +155,10 @@ export const StateContextProvider = ({ children }) => {
                 photoCid: p[3],
                 description: p[4],
                 proofCid: p[5],
-                amount: p[6].toString(),
+                amount: ethers.utils.formatEther(p[6].toString()),
                 proposer_addr: p[7],
                 approved: p[8],
-                totalVotes: s[8].total_avail_count.toNumber(),             
+                totalVotes: d[6].toNumber(),        
                 approveVotes: p[9].toNumber(),
                 rejectVotes: p[10].toNumber(),
                 dueDate : p[11].toNumber(),
@@ -211,6 +212,7 @@ export const StateContextProvider = ({ children }) => {
           } 
     }
     const nextProposalId = async(proposalId, disasterId, status) =>{
+
     }
 
     const prevProposalId = async(proposalId, disasterId, status) =>{
@@ -310,6 +312,8 @@ export const StateContextProvider = ({ children }) => {
         getDetailedProposal,
         getDisasterList,
         submitDisasterProposal,
+        finalize,
+        proposalVoting
       }}
     >
       <ToastContainer />

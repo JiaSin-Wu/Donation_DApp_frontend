@@ -3,12 +3,12 @@ import React from 'react';
 import {  thirdweb } from '../assets';
 import { daysLeft } from '../utils';
 
-const DisasterCard = ({ proposer_addr, title, description, dueDate, amount, photoCid, handleClick }) => {
+const DisasterCard = ({ proposer_addr, title, description, dueDate, amount, photoCid, onClick }) => {
     
   const remainingDays = daysLeft(dueDate*1000);
   
   return (
-    <div className="sm:w-[288px] w-full rounded-[15px] bg-[#1c1c24] cursor-pointer" onClick={handleClick}>
+    <div className="sm:w-[288px] w-full rounded-[15px] bg-[#1c1c24] cursor-pointer" onClick={onClick}>
       <img src={`https://gateway.pinata.cloud/ipfs/${photoCid}`} alt="preview" className="w-full h-[158px] object-cover rounded-[15px]"/>
 
       <div className="flex flex-col p-4">

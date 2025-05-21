@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect  } from 'react';
 import { toast } from 'react-toastify';
 import { useStateContext } from '../context';
 
@@ -6,7 +6,7 @@ import { useStateContext } from '../context';
 
 
 const Dropdown = ({ onSelect }) => { 
-    const [status, setStatus] = useState('');
+    const [status, setStatus] = useState('Active');
     const [disaster, setDisaster] = useState('');
     const [disasterOptions, setDisasterOptions] = useState([]);  
 
@@ -14,27 +14,45 @@ const Dropdown = ({ onSelect }) => {
     const { address, getDisaster } = useStateContext();
 
     const isLoggedIn = !!address;
-
-    const handleChange = async (e) => {
-        const value = e.target.value;
-
-        if (value === 'votable' && !isLoggedIn) {
-            toast.warning('Please connect your wallet before selecting "Votable".');
-            setStatus('');
-            setDisaster('');
-            setDisasterOptions([]);            
-            return; 
-        }
-        setStatus(value);
-        setDisaster('');
-
-        if (value) {
-            const disasters = await getDisaster(value);
-            console.log("Fetched disasters:", disasters);
-            setDisasterOptions(disasters); 
+    
+    useEffect(() => {
+      const fetchDisasters = async () => {
+        if (status) {
+          const disasters = await getDisaster(status);
+          setDisasterOptions(disasters);
         } else {
-            setDisasterOptions([]);
+          setDisasterOptions([]);
         }
+      };
+
+      fetchDisasters();
+    }, [status]);
+
+    useEffect(() => {
+      if (disasterOptions.length > 0) {
+        const firstId = disasterOptions[0].id;
+        setDisaster(firstId);
+
+        if (onSelect) {
+          onSelect({ disasterId: firstId, status });
+        }
+      }
+    }, [disasterOptions]);
+
+
+    const handleChange = (e) => {
+      const value = e.target.value;
+
+      if (value === 'Votable' && !isLoggedIn) {
+        toast.warning('Please connect your wallet before selecting "Votable".');
+        setStatus('');
+        setDisaster('');
+        setDisasterOptions([]);
+        return;
+      }
+
+      setStatus(value);
+      setDisaster('');
     };
 
     
