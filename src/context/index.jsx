@@ -87,16 +87,28 @@ export const StateContextProvider = ({ children }) => {
     //Dropdown 查詢使用
     const getDisasters = async (status) => {
       let rawdisasters;
+      let disasters;
       if (status === 'Active') {
         rawdisasters = await contract.call("getOngoingDisaster");
       } else if (status === 'Expired') {
         rawdisasters = await contract.call("getDueDisaster");
       } else if (status === 'Votable') {
         rawdisasters = await contract.call("getVotableDisaster", [address]);
-      }
+
+        disasters = await Promise.all(
+        rawdisasters.map(async (id) => {
+                const p = await contract.call("disasters", [id]);
+                return {
+                    id: p[0].toString(),
+                    name: p[1]
+                };
+            })
+        );
+        return disasters;
+      } 
 
         console.log("[getDisaster] Fetched disasterIds:", rawdisasters); 
-        const disasters = rawdisasters.map((d) => ({
+        disasters = rawdisasters.map((d) => ({
             id: d[0].toString(),   // BigNumber to string
             name: d[1]
           }));
@@ -110,10 +122,23 @@ export const StateContextProvider = ({ children }) => {
             proposalIds = await contract.call("getOngoingProposal", [disasterId]);
         } 
         else if(status == "Votable"){
-           proposalIds = await contract.call("getUnvoteProposal", [disasterId]);
+           proposalIds = await contract.call("getUnvoteProposal", [disasterId, address]);
         }
         else if( status == "Voted"){
-            proposalIds = await contract.call("getVotedProposal", [disasterId])
+            proposalIds = await contract.call("getVotedProposal", [disasterId, address])
+        }
+        else if (status ==='All'){
+            const proposals = await contract.call("getProposalList", [disasterId]);
+            const result = proposals.map((p) => ({
+                proposal_id: p[0].toString(),
+                title: p[2],
+                photoCid: p[3],
+                description: p[4],
+                amount: ethers.utils.formatEther(p[6].toString()),
+                proposer_addr: p[7],
+                dueDate : p[11].toNumber()
+            }));
+            return result;        
         }
 
         console.log("proposalIds:", proposalIds)

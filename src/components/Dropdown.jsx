@@ -5,7 +5,7 @@ import { useStateContext } from '../context';
 
 
 
-const Dropdown = ({ onSelect }) => { 
+const Dropdown = ({ selected_status ,onSelect }) => { 
     const [status, setStatus] = useState('Active');
     const [disaster, setDisaster] = useState('');
     const [disasterOptions, setDisasterOptions] = useState([]);  
@@ -42,15 +42,6 @@ const Dropdown = ({ onSelect }) => {
 
     const handleChange = (e) => {
       const value = e.target.value;
-
-      if (value === 'Votable' && !isLoggedIn) {
-        toast.warning('Please connect your wallet before selecting "Votable".');
-        setStatus('');
-        setDisaster('');
-        setDisasterOptions([]);
-        return;
-      }
-
       setStatus(value);
       setDisaster('');
     };
@@ -62,7 +53,7 @@ const Dropdown = ({ onSelect }) => {
 
         // ✅ 主動通知父層
         if (onSelect) {
-            onSelect({ disasterId: id });
+            onSelect({ status, disasterId: id });
         }
     };
 
@@ -81,8 +72,9 @@ const Dropdown = ({ onSelect }) => {
                     >
                         <option value="">-- Select Status --</option>
                         <option value="Active">Active</option>
+                        {isLoggedIn && <option value="Votable">Votable</option>}
                         <option value="Expired">Expired</option>
-                        <option value="Votable">Votable</option>
+                        
                     </select>
                 </div>
 
@@ -90,6 +82,7 @@ const Dropdown = ({ onSelect }) => {
                 <div className="flex flex-col gap-1 w-full">
                     <label className="text-sm text-gray-300" style={{ textAlignLast: 'center' }}>Disaster Category</label>
                     <select
+                        key={status}
                         value={disaster}
                         style={{ textAlignLast: 'center' }}
                         onChange={handleDisasterChange}

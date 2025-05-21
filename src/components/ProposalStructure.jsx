@@ -1,9 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Dropdown from './Dropdown';
 import { toast } from 'react-toastify';
 import { useStateContext } from '../context';
-import { useParams } from 'react-router-dom';
 
 const ProposalStructure = ({id, children }) => {
     const containerRef = useRef();

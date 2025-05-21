@@ -11,13 +11,13 @@ import { useStateContext } from '../context';
 
 
 const DisplayProposal = ({ title}) => {
-  const navigate = useNavigate();
   const [selectedDisasterId, setSelectedDisasterId] = useState(null);
   const [proposals, setProposals] = useState([]);
   const [isLoading, setLoading] = useState(false);
-  const [displayType, setDisplayType] = useState('Ongoing');
+  const [displayType, setDisplayType] = useState('All');
   const proposalContentRef = useRef();
     const [selectedProposalId, setSelectedProposalId] = useState(null);
+    const [disaster_status, set_disaster_status] =   useState('Active'); 
     const [showModal, setShowModal] = useState(false);
   const { address, getProposals} = useStateContext();
   
@@ -42,8 +42,9 @@ const DisplayProposal = ({ title}) => {
       <div className="mb-6">
         <div className="mb-4"> 
         <Dropdown
-          onSelect={({ disasterId }) => {
+          onSelect={({status ,disasterId }) => {
           setSelectedDisasterId(disasterId);
+          set_disaster_status(status);
           
         }}        /> 
        </div>
@@ -53,33 +54,40 @@ const DisplayProposal = ({ title}) => {
           <div className="flex justify-start mb-5">
             
             <div className="flex bg-[#1c1c24] rounded-[10px] overflow-hidden mb-4">
-
                 <button 
-                className={`px-4 py-2 font-epilogue font-semibold text-[14px] leading-[22px] ${displayType === 'Ongoing' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
+                className={`px-4 py-2 font-epilogue font-semibold text-[14px] leading-[22px] ${displayType === 'All' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
 
-                onClick={() => setDisplayType('Ongoing')}
+                onClick={() => setDisplayType('All')}
               >
-                Ongoing Proposal
+                All Proposal
               </button>
-              
-              {address && (
-                <>
-                  <button 
-                    className={`px-4 py-2 ... ${displayType === 'Votable' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
-                    onClick={() => setDisplayType('Votable')}
-                  >
-                    Votable Proposal
-                  </button>
 
-                  <button 
-                    className={`px-4 py-2 ... ${displayType === 'Voted' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
-                    onClick={() => setDisplayType('Voted')}
-                  >
-                    Voted Proposal
-                  </button>
-                </>
-              )}
-
+                {disaster_status !== "Expired" && (
+                    <>
+                      <button 
+                        className={`px-4 py-2 font-epilogue font-semibold text-[14px] leading-[22px] ${displayType === 'Ongoing' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
+                        onClick={() => setDisplayType('Ongoing')}
+                      >
+                        Ongoing Proposal
+                      </button>
+                      {address && (
+                        <>
+                          <button 
+                            className={`px-4 py-2 font-epilogue font-semibold text-[14px] leading-[22px] ${displayType === 'Votable' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
+                            onClick={() => setDisplayType('Votable')}
+                          >
+                            Votable Proposal
+                          </button>
+                          <button 
+                            className={`px-4 py-2 font-epilogue font-semibold text-[14px] leading-[22px] ${displayType === 'Voted' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
+                            onClick={() => setDisplayType('Voted')}
+                          >
+                            Voted Proposal
+                          </button>
+                        </>
+                      )}
+                    </>
+                  )}
             </div>
             <div className="flex items-center ml-8">
                 <h1 className="font-epilogue font-semibold text-[18px] text-white text-center">
