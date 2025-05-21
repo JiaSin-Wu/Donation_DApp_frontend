@@ -1,61 +1,238 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConfirmModal from '../components/ConfirmModal';
+import { toast } from 'react-toastify';
+import abi from '../contract/abi.json';
+import contractAddress from '../contract/address.json';
+import { useContract, useAddress } from '@thirdweb-dev/react';
+
+const IPFS_GATEWAYS = [
+  "https://gateway.pinata.cloud/ipfs/",
+  "https://ipfs.infura.io/ipfs/",
+  "https://cloudflare-ipfs.com/ipfs/",
+  "https://dweb.link/ipfs/"
+];
+
+const DEFAULT_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%232d3748'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24' fill='%23a0aec0'%3ENo Image Available%3C/text%3E%3C/svg%3E";
 
 const VoteDisaster = () => {
   const [voted, setVoted] = useState({});
   const [modalInfo, setModalInfo] = useState({ open: false, disasterId: null, disasterName: '', vote: null });
+  const [votableRequests, setVotableRequests] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const { contract } = useContract(contractAddress.toString(), abi);
+  const address = useAddress();
 
-  const dummyDisasters = [
-    {
-      id: 1,
-      title: "Turkey Earthquake",
-      description: "Major earthquake in southern Turkey",
-      deadline: Date.now() + 1000 * 60 * 60 * 24, // +1 day
-    },
-    {
-      id: 2,
-      title: "Flood in India",
-      description: "Severe flooding in northern India",
-      deadline: Date.now() + 1000 * 60 * 60 * 12, // +12 hours
-    },
-  ];
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      
+      if (!address) {
+        setIsLoading(true);
+        return;
+      }
+
+      if (!contract) {
+        setIsLoading(true);
+        return;
+      }
+
+      try {
+        const adminStatus = await contract.call("admins", [address]);
+        setIsAdmin(adminStatus);
+        
+        if (!adminStatus) {
+          toast.error("Only admins can vote");
+          setIsLoading(false);
+          return;
+        }
+
+        try {
+          const requests = await contract.call("getVotableRequests", [address]);
+          
+          if (!requests || !Array.isArray(requests)) {
+            console.warn("No votable requests returned from contract.");
+            setVotableRequests([]);
+            setIsLoading(false);
+            return;
+          }
+
+          // Check voting status for each request
+          const requestsWithVoteStatus = await Promise.all(requests.map(async (request) => {
+            const hasVoted = await contract.call("requestHasVoted", [request.id, address]);
+            const voteType = hasVoted ? await contract.call("requestVoteType", [request.id, address]) : null;
+            return {
+              ...request,
+              hasVoted,
+              voteType
+            };
+          }));
+
+          const formattedRequests = requestsWithVoteStatus.map(request => ({
+            id: request.id.toString(),
+            title: request.title,
+            description: request.description,
+            proposer: request.proposer,
+            ended: request.ended,
+            approveVotes: request.approveVotes.toString(),
+            rejectVotes: request.rejectVotes.toString(),
+            votingDeadline: new Date(request.votingDeadline.toNumber() * 1000).toLocaleString(),
+            residualAddress: request.residualAddress,
+            hasVoted: request.hasVoted,
+            voteType: request.voteType,
+            photoCid: request.photoCid || request.cid
+          }));
+          
+          setVotableRequests(formattedRequests);
+        } catch (requestError) {
+          console.error("Error fetching votable requests:", requestError);
+          toast.error(requestError.reason || "Error fetching votable requests");
+          setVotableRequests([]);
+        }
+      } catch (error) {
+        console.error("Detailed error:", {
+          message: error.message,
+          reason: error.reason,
+          code: error.code,
+          data: error.data
+        });
+        toast.error(error.reason || "Error checking admin status");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [contract, address]);
 
   const handleVoteClick = (disasterId, disasterName, vote) => {
     setModalInfo({ open: true, disasterId, disasterName, vote });
   };
 
-  const confirmVote = () => {
+  const confirmVote = async () => {
     const { disasterId, vote } = modalInfo;
-    setVoted(prev => ({ ...prev, [disasterId]: vote }));
-    setModalInfo({ open: false, disasterId: null, disasterName: '', vote: null });
+    try {
+      await contract.call("voteRequest", [disasterId, vote === "accept"]);
+      setVoted(prev => ({ ...prev, [disasterId]: vote }));
+      setModalInfo({ open: false, disasterId: null, disasterName: '', vote: null });
+      toast.success("Vote submitted successfully!");
+    } catch (error) {
+      console.error("Voting error:", {
+        message: error.message,
+        reason: error.reason,
+        code: error.code,
+        data: error.data
+      });
+      toast.error(error.reason || "Error submitting vote");
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-8">
+        <h1 className="text-white text-2xl font-bold mb-6">Vote on Disasters</h1>
+        <div className="bg-[#1c1c24] text-white p-6 rounded-lg">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="p-8">
+        <h1 className="text-white text-2xl font-bold mb-6">Vote on Disasters</h1>
+        <div className="bg-[#1c1c24] text-white p-6 rounded-lg">
+          <p>You need to be an admin to access this page.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
       <h1 className="text-white text-2xl font-bold mb-6">Vote on Disasters</h1>
 
-      {dummyDisasters.filter(d => d.deadline > Date.now()).map(disaster => (
-        <div key={disaster.id} className="bg-[#1c1c24] text-white p-6 rounded-lg mb-4">
-          <h2 className="text-xl font-semibold">{disaster.title}</h2>
-          <p className="text-sm my-2">{disaster.description}</p>
-          <div className="flex gap-4 mt-3">
-            <button
-              disabled={voted[disaster.id]}
-              onClick={() => handleVoteClick(disaster.id, disaster.title, "accept")}
-              className={`px-4 py-2 rounded ${voted[disaster.id] ? 'bg-gray-500' : 'bg-green-600 hover:bg-green-700'}`}
-            >
-              👍 Agree
-            </button>
-            <button
-              disabled={voted[disaster.id]}
-              onClick={() => handleVoteClick(disaster.id, disaster.title, "reject")}
-              className={`px-4 py-2 rounded ${voted[disaster.id] ? 'bg-gray-500' : 'bg-red-600 hover:bg-red-700'}`}
-            >
-              👎 Disagree
-            </button>
-          </div>
+      {votableRequests.length === 0 ? (
+        <div className="bg-[#1c1c24] text-white p-6 rounded-lg">
+          <p>No votable requests available at the moment.</p>
         </div>
-      ))}
+      ) : (
+        votableRequests.map(request => {
+          const imageUrl = request.photoCid ? `${IPFS_GATEWAYS[0]}${request.photoCid}` : DEFAULT_IMAGE;
+          
+          return (
+            <div key={request.id} className="bg-[#1c1c24] text-white p-6 rounded-lg mb-4">
+              <div className="flex gap-6">
+                <div className="w-1/3">
+                  <img 
+                    src={imageUrl}
+                    alt={request.title}
+                    className="w-full h-48 object-cover rounded-lg"
+                    onError={(e) => {
+                      console.log("Image load error for:", imageUrl);
+                      e.target.onerror = null;
+                      e.target.src = DEFAULT_IMAGE;
+                    }}
+                  />
+                </div>
+                <div className="w-2/3">
+                  <h2 className="text-xl font-semibold">{request.title}</h2>
+                  <p className="text-sm my-2">{request.description}</p>
+                  <div className="grid grid-cols-1 gap-4 mb-4">
+                    {/* <div>
+                      <p className="text-sm text-gray-400">Proposer:</p>
+                      <p className="text-sm break-all">{request.proposer}</p>
+                    </div> */}
+                    <div>
+                      <p className="text-sm text-gray-400">Voting Deadline:</p>
+                      <p className="text-sm">{request.votingDeadline}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-400">Approve Votes:</p>
+                        <p className="text-sm text-green-500">{request.approveVotes}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-400">Reject Votes:</p>
+                        <p className="text-sm text-red-500">{request.rejectVotes}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-4 mt-3">
+                    <button
+                      disabled={request.hasVoted}
+                      onClick={() => handleVoteClick(request.id, request.title, "accept")}
+                      className={`px-4 py-2 rounded ${
+                        request.hasVoted 
+                          ? 'bg-gray-500 cursor-not-allowed' 
+                          : request.voteType === true 
+                            ? 'bg-green-600' 
+                            : 'bg-green-600 hover:bg-green-700'
+                      }`}
+                    >
+                      👍 Agree {request.hasVoted && request.voteType === true && '(Voted)'}
+                    </button>
+                    <button
+                      disabled={request.hasVoted}
+                      onClick={() => handleVoteClick(request.id, request.title, "reject")}
+                      className={`px-4 py-2 rounded ${
+                        request.hasVoted 
+                          ? 'bg-gray-500 cursor-not-allowed' 
+                          : request.voteType === false 
+                            ? 'bg-red-600' 
+                            : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                    >
+                      👎 Disagree {request.hasVoted && request.voteType === false && '(Voted)'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })
+      )}
 
       <ConfirmModal
         isOpen={modalInfo.open}
