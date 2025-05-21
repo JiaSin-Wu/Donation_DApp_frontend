@@ -56,7 +56,7 @@ const ProposalContent = ({ id }) => {
                     {/*<CountdownTimer title="Left" targetDate={proposal.dueDate} /> */}
                     <CountBox title="Days Left" value={remainingDays} /> 
                     <CountBox title={`Required ETH`} value={proposal.amount} />
-                    <VotePieChart supportCount={proposal.totalVotes} rejectCount={proposal.rejectVotes} totalEligible={proposal.approveVotes} />
+                    <VotePieChart supportCount={proposal.approveVotes} rejectCount={proposal.rejectVotes} totalEligible={proposal.totalVotes} />
                 </div>
             </div>
 
