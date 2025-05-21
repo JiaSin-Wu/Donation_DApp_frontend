@@ -20,6 +20,7 @@ const VoteDisaster = () => {
   const [votableRequests, setVotableRequests] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isVoting, setIsVoting] = useState(false);
   
   const { contract } = useContract(contractAddress.toString(), abi);
   const address = useAddress();
@@ -111,11 +112,68 @@ const VoteDisaster = () => {
 
   const confirmVote = async () => {
     const { disasterId, vote } = modalInfo;
-    try {
-      await contract.call("voteRequest", [disasterId, vote === "accept"]);
-      setVoted(prev => ({ ...prev, [disasterId]: vote }));
+    
+    if (isVoting) {
+      return;
+    }
+
+    if (!contract) {
+      toast.error("Contract not initialized");
       setModalInfo({ open: false, disasterId: null, disasterName: '', vote: null });
-      toast.success("Vote submitted successfully!");
+      return;
+    }
+
+    setIsVoting(true);
+    try {
+      // First check if user has already voted
+      const hasVoted = await contract.call("requestHasVoted", [disasterId, address]);
+      if (hasVoted) {
+        toast.error("You have already voted for this request");
+        setModalInfo({ open: false, disasterId: null, disasterName: '', vote: null });
+        return;
+      }
+
+      // Attempt to send the transaction
+      const tx = await contract.call("voteRequest", [disasterId, vote === "accept"]);
+      
+      // Show pending toast
+      toast.info("Transaction submitted, waiting for confirmation...");
+      
+      // Wait for transaction to be mined
+      const receipt = await tx.wait();
+      
+      if (receipt.status === 1) {
+        // Update local state
+        setVoted(prev => ({ ...prev, [disasterId]: vote }));
+        
+        // Update votableRequests with new vote status
+        setVotableRequests(prev => 
+          prev.map(req => {
+            if (req.id === disasterId) {
+              const newApproveVotes = vote === "accept" 
+                ? (parseInt(req.approveVotes) + 1).toString() 
+                : req.approveVotes;
+              const newRejectVotes = vote === "reject" 
+                ? (parseInt(req.rejectVotes) + 1).toString() 
+                : req.rejectVotes;
+              
+              return {
+                ...req,
+                hasVoted: true,
+                voteType: vote === "accept",
+                approveVotes: newApproveVotes,
+                rejectVotes: newRejectVotes
+              };
+            }
+            return req;
+          })
+        );
+        
+        setModalInfo({ open: false, disasterId: null, disasterName: '', vote: null });
+        toast.success("Vote submitted successfully!");
+      } else {
+        throw new Error("Transaction failed");
+      }
     } catch (error) {
       console.error("Voting error:", {
         message: error.message,
@@ -123,7 +181,18 @@ const VoteDisaster = () => {
         code: error.code,
         data: error.data
       });
-      toast.error(error.reason || "Error submitting vote");
+      
+      // Handle specific error cases
+      if (error.message?.includes("user rejected")) {
+        toast.error("Transaction was rejected");
+      } else if (error.message?.includes("insufficient funds")) {
+        toast.error("Insufficient funds for gas");
+      }
+      
+      // Close modal on error
+      setModalInfo({ open: false, disasterId: null, disasterName: '', vote: null });
+    } finally {
+      setIsVoting(false);
     }
   };
 
@@ -160,6 +229,8 @@ const VoteDisaster = () => {
       ) : (
         votableRequests.map(request => {
           const imageUrl = request.photoCid ? `${IPFS_GATEWAYS[0]}${request.photoCid}` : DEFAULT_IMAGE;
+          const hasVoted = request.hasVoted || voted[request.id];
+          const voteType = request.voteType;
           
           return (
             <div key={request.id} className="bg-[#1c1c24] text-white p-6 rounded-lg mb-4">
@@ -201,30 +272,30 @@ const VoteDisaster = () => {
                   </div>
                   <div className="flex gap-4 mt-3">
                     <button
-                      disabled={request.hasVoted}
+                      disabled={hasVoted}
                       onClick={() => handleVoteClick(request.id, request.title, "accept")}
                       className={`px-4 py-2 rounded ${
-                        request.hasVoted 
+                        hasVoted 
                           ? 'bg-gray-500 cursor-not-allowed' 
-                          : request.voteType === true 
+                          : voteType === true 
                             ? 'bg-green-600' 
                             : 'bg-green-600 hover:bg-green-700'
                       }`}
                     >
-                      👍 Agree {request.hasVoted && request.voteType === true && '(Voted)'}
+                      👍 Agree {hasVoted && voteType === true && '(Voted)'}
                     </button>
                     <button
-                      disabled={request.hasVoted}
+                      disabled={hasVoted}
                       onClick={() => handleVoteClick(request.id, request.title, "reject")}
                       className={`px-4 py-2 rounded ${
-                        request.hasVoted 
+                        hasVoted 
                           ? 'bg-gray-500 cursor-not-allowed' 
-                          : request.voteType === false 
+                          : voteType === false 
                             ? 'bg-red-600' 
                             : 'bg-red-600 hover:bg-red-700'
                       }`}
                     >
-                      👎 Disagree {request.hasVoted && request.voteType === false && '(Voted)'}
+                      👎 Disagree {hasVoted && voteType === false && '(Voted)'}
                     </button>
                   </div>
                 </div>
@@ -236,9 +307,15 @@ const VoteDisaster = () => {
 
       <ConfirmModal
         isOpen={modalInfo.open}
-        onClose={() => setModalInfo({ open: false, disasterId: null, disasterName: '', vote: null })}
+        onClose={() => {
+          if (!isVoting) {
+            setModalInfo({ open: false, disasterId: null, disasterName: '', vote: null });
+          }
+        }}
         onConfirm={confirmVote}
         title={`You sure you want to vote for disaster #${modalInfo.disasterId} ${modalInfo.disasterName} to be「${modalInfo.vote === "accept" ? "Agree" : "Disagree"}」?`}
+        isLoading={isVoting}
+        disabled={isVoting}
       />
     </div>
   );
