@@ -10,6 +10,7 @@ const NO_ETHEREUM_ERR = 'Please install MetaMask or another Web3 wallet';
 const LOGIN_FAIL_ERR = 'Please connect your wallet first';
 const TX_FAIL_ERR = 'Transaction failed';
 const NO_NUMBER_ERR = 'Please enter a valid donation amount';
+const TOO_SMALL_AMOUNT_ERR = 'Please enter a valid donation amount (at least 0.000000000000000001 ETH).';
 
 // status code
 const TX_SUCCESS_CODE = 1;
@@ -28,7 +29,7 @@ const get_disasterList = async () => {
         const disasters = await contract.getOngoingDisaster();
 
         const items = disasters.map((disaster) => ({
-            id: ethers.utils.formatEther(disaster.id),
+            id: disaster.id,
             title: disaster.name,
             donationAddress: disaster.residualAddress,
             image: `https://gateway.pinata.cloud/ipfs/${disaster.photoCid}`
@@ -49,18 +50,28 @@ const donate = async (disaster_id, amount) => {
             const signer = provider.getSigner();
             const contract = new ethers.Contract(contractAddress, abi, signer);
 
-            // 2. 轉換 ETH 金額為 wei
-            const value = ethers.utils.parseEther(amount);
 
-            // 3. 呼叫 payable 函式
+            // 金額檢查
+            if (!amount || isNaN(amount) || parseFloat(amount) < 0.000000000000000001) {
+                return {
+                    _tx_status: false,
+                    _error_msg: TOO_SMALL_AMOUNT_ERR
+                };
+            }
+
+            // 轉換 ETH 金額為 wei
+            const value = ethers.utils.parseEther(amount.toString());
+            // 呼叫 payable 函式
             const tx = await contract.donate(disaster_id, { value });
 
-            // 4. 等待交易上鏈（成功與否會反映在 receipt.status）
+            // 等待交易上鏈（成功與否會反映在 receipt.status）
             const receipt = await tx.wait();
 
             const gasUsed = receipt.gasUsed;
             const effectiveGasPrice = receipt.effectiveGasPrice; // for EIP-1559
+
             const gasFeeEth = ethers.utils.formatEther(gasUsed.mul(effectiveGasPrice));
+
 
             const result = {
                 _tx_status : receipt.status === TX_SUCCESS_CODE,
@@ -74,6 +85,7 @@ const donate = async (disaster_id, amount) => {
                 _tx_status : false,
                 _error_msg : TX_FAIL_ERR
             }
+            console.log("error : ", error);
             return result;
         }
 
