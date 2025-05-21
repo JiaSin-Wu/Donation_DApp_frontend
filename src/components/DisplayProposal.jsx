@@ -10,6 +10,7 @@ const DisplayProposal = ({ title}) => {
   const [selectedDisasterId, setSelectedDisasterId] = useState(null);
   const [proposals, setProposals] = useState([]);
   const [isLoading, setLoading] = useState(false);
+  const [displayType, setDisplayType] = useState('Ongoing');
   const {getProposals} = useStateContext();
   const handleNavigate = (proposal) => {
     navigate(`/proposal-details/${proposal. proposal_id}`);
@@ -38,10 +39,46 @@ const DisplayProposal = ({ title}) => {
         }}        /> 
         
       </div>
+        {/* Status filter tabs */}
+          <div className="flex justify-start mb-5">
+            
+            <div className="flex bg-[#1c1c24] rounded-[10px] overflow-hidden">
+              <button 
+                className={`px-4 py-2 font-epilogue font-semibold text-[14px] leading-[22px] ${displayType === 'All' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
 
-      <h1 className="font-epilogue font-semibold text-[18px] text-white text-left">
-        {title} ({proposals.length})
-      </h1>
+                onClick={() => setDisplayType('All')}
+              >
+                All Proposal
+              </button>
+              <button 
+                className={`px-4 py-2 font-epilogue font-semibold text-[14px] leading-[22px] ${displayType === 'Votable' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
+                onClick={() => setDisplayType('Votable')}
+              >
+                Votable Proposal
+              </button>
+              <button 
+                className={`px-4 py-2 font-epilogue font-semibold text-[14px] leading-[22px] ${displayType === 'Ongoing' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
+
+                onClick={() => setDisplayType('Ongoing')}
+              >
+                Ongoing Proposal
+              </button>
+              
+              <button 
+                className={`px-4 py-2 font-epilogue font-semibold text-[14px] leading-[22px] ${displayType === 'Voted' ? 'bg-[#4acd8d] text-white' : 'bg-[#28282e] text-[#808191]'}`}
+                onClick={() => setDisplayType('Voted')}
+              >
+                Voted Proposal
+              </button>
+            </div>
+            <div className="flex items-center ml-8">
+                <h1 className="font-epilogue font-semibold text-[18px] text-white text-center">
+                {proposals.length} proposals found
+                  </h1>
+            </div>
+          </div>
+
+      
 
       <div className="flex flex-wrap mt-[20px] gap-[26px]">
         {isLoading && (
@@ -50,7 +87,7 @@ const DisplayProposal = ({ title}) => {
 
         {!isLoading && proposals.length === 0 && (
           <p className="font-epilogue font-semibold text-[14px] leading-[30px] text-[#818183]">
-            You have not created any campaigns yet
+          Please select a disater first!
           </p>
         )}
 

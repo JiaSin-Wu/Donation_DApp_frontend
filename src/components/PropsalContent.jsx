@@ -11,10 +11,10 @@ import { toast } from 'react-toastify';
 
 const ProposalContent = () => {
     //API
-    const { address, getDetailedProposal, contract} = useStateContext();
+    const { address, getDetailedProposal, contract, finalize, proposalVoting} = useStateContext();
     const { id } = useParams();
 
-    const [proposal, setProposal] = useState(null);
+    const [proposal, setProposal] = useState(null); 
     const [isLoading, setIsLoading] = useState(true);
 
       useEffect(() => {
@@ -57,7 +57,7 @@ const ProposalContent = () => {
                     {/*<CountdownTimer title="Left" targetDate={proposal.dueDate} /> */}
                     <CountBox title="Days Left" value={remainingDays} /> 
                     <CountBox title={`Required ETH`} value={proposal.amount} />
-                    <VotePieChart supportCount={20} rejectCount={20} totalEligible={100} />
+                    <VotePieChart supportCount={proposal.totalVotes} rejectCount={proposal.approveVotes} totalEligible={proposal.rejectedVotes} />
                 </div>
             </div>
 
@@ -124,9 +124,7 @@ const ProposalContent = () => {
                                 btnType="button"
                                 title="Finalize"
                                 styles="w-full bg-[#8c6dfd]"
-                                handleClick={() => {
-                                    
-                                }}
+                                handleClick={() => finalize(id)}
                             /> <br /><br />
                             
                         </div>
