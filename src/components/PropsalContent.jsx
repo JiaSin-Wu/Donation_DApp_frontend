@@ -94,7 +94,7 @@ const ProposalContent = ({ id }) => {
                                   download
                                   className="font-epilogue font-normal text-[16px] text-[#4acd8d] leading-[26px] underline hover:opacity-80"
                                 >
-                                  Download ZIP file
+                                  See more details
                                 </a>
 
                             </p>
