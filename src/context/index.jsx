@@ -208,9 +208,9 @@ export const StateContextProvider = ({ children }) => {
             if (message.includes("Already approved")) {
               alert("❌ Already approved");
             } else if (message.includes("Not enough votes")) {
-              alert("❌ Not enough votes");
+              alert("❌ Not enough vot");
             } else if (message.includes("Insufficient funds")) {
-              alert("❌ Insufficient funds");
+              alert("❌  Approval votes did not exceed 50%, or total votes were less than 1%.");
             } else {
               console.error("Finalize 發生未知錯誤：", err);
               alert("❌ System error. Try later!");
@@ -236,12 +236,7 @@ export const StateContextProvider = ({ children }) => {
             }
           } 
     }
-    const nextProposalId = async(proposalId, disasterId, status) =>{
 
-    }
-
-    const prevProposalId = async(proposalId, disasterId, status) =>{
-    }
 
 
 
