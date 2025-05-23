@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 
 import { Sidebar, Navbar } from './components';
-import { CampaignDetails, AddDisaster, UpdateCampaign, Home, Profile, ProposalVoting, ProposalDetails, ApplicationSubmit, Donation, DonationLookup, DisasterVoting, Introduction } from './pages';
+import { CampaignDetails, AddDisaster, UpdateCampaign, ProposalVoting, ProposalDetails, ApplicationSubmit, DonationLookup, DisasterVoting, Introduction, DonateNow } from './pages';
 
 const App = () => {
   return (
@@ -11,22 +11,21 @@ const App = () => {
         <Sidebar />
       </div>
 
-      <div className="flex-1 max-sm:w-full md:basis-3/6 mx-auto sm:pr-5">
+      <div className="flex-1 max-sm:w-full md:basis-3/6 mx-auto sm:pr-20 max-w-[1080px]">
         <Navbar />
 
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/" element={<Introduction />} />
           <Route path="/add-disaster" element={<AddDisaster />} />
           <Route path="/campaign-details/:id" element={<CampaignDetails />} />
           <Route path="/campaign-update/:id" element={<UpdateCampaign />} />
           <Route path="/proposal-voting" element={<ProposalVoting />} />
           <Route path="/proposal-details/:id" element={<ProposalDetails />} />
           <Route path="/application" element={<ApplicationSubmit />} />
-          <Route path="/donation" element={<Donation />} />
           <Route path="/donation-lookup" element={<DonationLookup />} />
           <Route path="/disaster-voting" element={<DisasterVoting />} />
           <Route path="/introduction" element={<Introduction />} />
+          <Route path="/donate-now" element={<DonateNow />} />
         </Routes>
       </div>
     </div>

@@ -4,16 +4,28 @@ import contractAddress from '../contract/address.json'
 
 export const navlinks = [
   {
-    name: 'Home',
-    imgUrl: dashboard,
-    link: '/',
-    id: 0
-  },
-  {
     name: 'Introduction',
     imgUrl: dashboard,
     link: '/introduction',
     id: 11
+  },
+  {
+    name: 'Donate Now',
+    imgUrl: payment,
+    link: '/donate-now',
+    id: 12
+  },
+  {
+    name: 'Request Funds',
+    imgUrl: createCampaign,
+    link: '/application',
+    id: 2
+  },
+  {
+    name: 'Proposal Voting',
+    imgUrl: vote,
+    link: '/proposal-voting',
+    id: 8
   },
   {
     name: 'Add Disaster',
@@ -60,6 +72,7 @@ export const navlinks = [
   },
   {
     name: 'Donation Record',
+    name: 'My Donation',
     imgUrl: payment,
     link: '/donation-lookup',
     id: 10
