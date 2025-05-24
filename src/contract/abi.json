@@ -34,7 +34,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"ReentrancyGuardReentrantCall",
 	   "type":"error"
@@ -223,7 +223,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"DEFAULT_DISASTER_DURATION",
 	   "outputs":[
@@ -238,7 +238,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"MIN_APPROVE_RATIO_NEW",
 	   "outputs":[
@@ -253,7 +253,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"MIN_APPROVE_RATIO_PROOF",
 	   "outputs":[
@@ -268,7 +268,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"TIMELOCK",
 	   "outputs":[
@@ -283,7 +283,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"VOTING_PERIOD",
 	   "outputs":[
@@ -298,7 +298,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"VOTING_POWER_BASE",
 	   "outputs":[
@@ -321,7 +321,7 @@
 	   ],
 	   "name":"addAdmin",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"nonpayable",
 	   "type":"function"
@@ -351,7 +351,7 @@
 	   ],
 	   "name":"addRequest",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"payable",
 	   "type":"function"
@@ -396,7 +396,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"disasterCount",
 	   "outputs":[
@@ -473,7 +473,7 @@
 	   ],
 	   "name":"donate",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"payable",
 	   "type":"function"
@@ -512,7 +512,7 @@
 	   ],
 	   "name":"endDisaster",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"nonpayable",
 	   "type":"function"
@@ -527,7 +527,7 @@
 	   ],
 	   "name":"finalizeDisaster",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"nonpayable",
 	   "type":"function"
@@ -542,14 +542,14 @@
 	   ],
 	   "name":"finalizeProposal",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"nonpayable",
 	   "type":"function"
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"getAdminCount",
 	   "outputs":[
@@ -564,7 +564,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"getDisasterList",
 	   "outputs":[
@@ -621,7 +621,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"getDueDisaster",
 	   "outputs":[
@@ -677,55 +677,31 @@
 	   "type":"function"
 	},
 	{
-	   "inputs":[
-		  {
-			 "internalType":"address",
-			 "name":"queryAddress",
-			 "type":"address"
-		  }
-	   ],
-	   "name":"getMyDonations",
-	   "outputs":[
-		  {
-			 "components":[
-				{
-				   "internalType":"uint256",
-				   "name":"disasterId",
-				   "type":"uint256"
-				},
-				{
-				   "internalType":"string",
-				   "name":"name",
-				   "type":"string"
-				},
-				{
-				   "internalType":"address",
-				   "name":"donateAddress",
-				   "type":"address"
-				},
-				{
-				   "internalType":"string",
-				   "name":"photoCid",
-				   "type":"string"
-				},
-				{
-				   "internalType":"uint256",
-				   "name":"total_amount",
-				   "type":"uint256"
-				},
-				{
-				   "internalType":"uint256",
-				   "name":"vote_per",
-				   "type":"uint256"
-				}
-			 ],
-			 "internalType":"struct DisasterResponse.DonationRecord[]",
-			 "name":"",
-			 "type":"tuple[]"
-		  }
-	   ],
-	   "stateMutability":"view",
-	   "type":"function"
+		"inputs": [
+			{
+			"internalType": "address",
+			"name": "queryAddress",
+			"type": "address"
+			}
+		],
+		"name": "getMyDonations",
+		"outputs": [
+			{
+			"internalType": "struct DonationRecord[]",
+			"name": "",
+			"type": "tuple[]",
+			"components": [
+				{ "internalType": "uint256", "name": "disasterId", "type": "uint256" },
+				{ "internalType": "string", "name": "name", "type": "string" },
+				{ "internalType": "address", "name": "donateAddress", "type": "address" },
+				{ "internalType": "string", "name": "photoCid", "type": "string" },
+				{ "internalType": "uint256", "name": "total_amount", "type": "uint256" },
+				{ "internalType": "uint256", "name": "vote_per", "type": "uint256" }
+			]
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
 	},
 	{
 	   "inputs":[
@@ -802,7 +778,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"getOngoingDisaster",
 	   "outputs":[
@@ -1333,7 +1309,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"newRewardAmount",
 	   "outputs":[
@@ -1348,7 +1324,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"owner",
 	   "outputs":[
@@ -1363,7 +1339,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"proposalCount",
 	   "outputs":[
@@ -1513,25 +1489,25 @@
 	   ],
 	   "name":"removeAdmin",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"nonpayable",
 	   "type":"function"
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"renounceOwnership",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"nonpayable",
 	   "type":"function"
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"requestCount",
 	   "outputs":[
@@ -1658,7 +1634,7 @@
 	},
 	{
 	   "inputs":[
-		  
+
 	   ],
 	   "name":"stakeAmount",
 	   "outputs":[
@@ -1706,7 +1682,7 @@
 	   ],
 	   "name":"submitProposal",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"nonpayable",
 	   "type":"function"
@@ -1721,7 +1697,7 @@
 	   ],
 	   "name":"transferOwnership",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"nonpayable",
 	   "type":"function"
@@ -1741,7 +1717,7 @@
 	   ],
 	   "name":"voteProposal",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"nonpayable",
 	   "type":"function"
@@ -1761,7 +1737,7 @@
 	   ],
 	   "name":"voteRequest",
 	   "outputs":[
-		  
+
 	   ],
 	   "stateMutability":"nonpayable",
 	   "type":"function"

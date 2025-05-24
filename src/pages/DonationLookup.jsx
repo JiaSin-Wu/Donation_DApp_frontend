@@ -16,8 +16,9 @@ const get_myDonations = async () => {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
         const contract = new ethers.Contract(contractAddress, abi, signer);
+        const userAddress = await signer.getAddress();
 
-        const donations = await contract.getMyDonations();
+        const donations = await contract.getMyDonations(userAddress);
 
         const items = donations.map((donation) => ({
             id: donation.disasterId,
