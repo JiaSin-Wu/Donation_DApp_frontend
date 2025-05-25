@@ -14,7 +14,6 @@ const ProposalStructure = ({id, children }) => {
 
 
     const [voteLoading, setVoteLoading] = useState(false);
-    const [showActionButtons, setShowActionButtons] = useState(false);
     const [voteStatus, setVoteStatus] = useState({
         voted: false,
         voteType: null, // true: approve, false: reject
@@ -35,8 +34,14 @@ const ProposalStructure = ({id, children }) => {
       try {
         if (action === "support") {
           await proposalVoting(id, true);
+          const result = await getProposalVoteRecord(id, address);
+          setVoteStatus(result);
+          
         } else if (action === "reject") {
           await proposalVoting(id, false);
+          const result = await getProposalVoteRecord(id, address);
+          setVoteStatus(result);
+
         }
       } catch (e) {
         alert("proposal voting has some problem")

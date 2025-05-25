@@ -1,5 +1,4 @@
 import React, { useState , useEffect, useRef} from 'react';
-import { useNavigate } from 'react-router-dom';
 import DisasterCard from './DisasterCard';
 import { loader } from '../assets';
 import Dropdown from './Dropdown';
