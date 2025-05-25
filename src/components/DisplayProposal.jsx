@@ -33,7 +33,7 @@ const DisplayProposal = ({ title}) => {
       }
     }, [selectedDisasterId, displayType]);
 
-            // 箭頭能不能點
+            
   const currentIndex = proposals.findIndex(p => p.proposal_id === selectedProposalId);
 
 
@@ -109,7 +109,9 @@ const DisplayProposal = ({ title}) => {
           </p>
         )}
 
-        {!isLoading && proposals.map((proposal, index) => (
+
+        {/* Main content */}       
+        {!isLoading && proposals.slice().reverse().map((proposal, index) => (
           <DisasterCard
             key={`campaign-${index}`}
             {...proposal}
@@ -120,6 +122,11 @@ const DisplayProposal = ({ title}) => {
           />
         ))}
       </div>
+
+
+
+
+
       {showModal && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-70 overflow-auto flex justify-center items-start pt-20">
             <div className="relative w-full max-w-[1000px] bg-[#1e1e1e] rounded-xl p-6">

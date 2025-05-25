@@ -10,44 +10,31 @@ export const navlinks = [
     id: 1
   },
   {
-    name: 'Add Disaster',
-    imgUrl: createCampaign,
-    link: '/add-disaster',
-    id: 2
-  },
-  {
-    name: 'Disaster Voting',
-    imgUrl: vote,
-    link: '/disaster-voting',
-    id: 3
-  },
-  {
     name: 'Donation',
     imgUrl: payment,
-    link: '/donation',
-    id: 4
-  },
-  {
-    name: 'Donation Record',
-    name: 'My Donation',
-    imgUrl: payment,
-    link: '/donation-lookup',
-    id: 10
-  },
-  {
-    name: 'Application',
-    imgUrl: createCampaign,
-    link: '/application',
-    id: 2
+    submenu: [
+      { name: "Donate", link: '/donation' },
+      { name: "My Donation", link: '/donation-lookup' }
+    ]
   },
 
   {
-    name: 'Proposal Voting',
-    imgUrl: vote,
-    link: '/proposal-voting',
-    id: 8
+    name: 'Application',
+    imgUrl: createCampaign,
+    submenu: [
+      { name: "Disaster Apllication", link: '/add-disaster' },
+      { name: "Proposal Application", link: '/application' }
+    ]
   },
-];
+    {
+    name: 'Voting',
+    imgUrl: vote,
+    submenu: [
+      { name: "Disaster Voting", link: '/disaster-voting' },
+      { name: "Proposal Voting", link: '/proposal-voting' }
+    ]
+  },
+  ];
 
 export const DisasterResponseAddress = contractAddress.contractAddress;
 export const DisasterResponseABI = abi;

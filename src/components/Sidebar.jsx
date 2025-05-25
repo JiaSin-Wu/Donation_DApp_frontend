@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { logo, sun, Tokenkhan } from '../assets';
+import { Tokenkhan } from '../assets';
 import { navlinks } from '../constants';
 
 const Icon = ({ styles, name, imgUrl, isActive, disabled, handleClick }) => (
@@ -22,7 +22,6 @@ const Icon = ({ styles, name, imgUrl, isActive, disabled, handleClick }) => (
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const [isActive, setIsActive] = useState('Home');
   return (
     <div className="flex justify-between items-center flex-col sticky top-5 h-[93vh]">
     <div className="min-h-screen flex flex-col flex-auto flex-shrink-0 antialiased bg-gray-50 text-gray-800">
@@ -35,22 +34,36 @@ const Sidebar = () => {
     <div className="overflow-y-auto overflow-x-hidden flex-grow mt-10">
       <ul className="flex flex-col py-4 space-y-1">
          {navlinks.map((link, index) => (
-            <li key={index}>
-            <Icon
-                key={link.id}
-                {...link}
-                isActive={isActive}
-                name={link.name}
-                styles={"relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6"}
-                handleClick={() => {
-                  if(!link.disabled) {
-                    setIsActive(link.name);
-                    navigate(link.link);
-                  }
-                }}
-              />
-          </li>
-          ))}
+              <li key={index} >
+                <div
+                  className="relative flex flex-row items-center h-11 pl-2 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6"
+                  onClick={() => {
+                    if (!link.submenu) {
+                      navigate(link.link);
+                    }
+                  }}
+                >
+                  <img src={link.imgUrl} className="w-5 h-5 mr-3" />
+                  <span>{link.name}</span>
+                </div>
+
+                {/* 子選單展開在下方 */}
+                {link.submenu && (
+                  <div className="ml-6 pl-3 border-l border-gray-300 space-y-1 mt-1">
+                    {link.submenu.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="text-sm text-gray-600 pl-2 py-1 rounded hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer transition-all duration-150"
+                        onClick={() => navigate(item.link)}
+                      >
+                        {item.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </li>
+            ))}
+
       </ul>
     </div>
   </div>

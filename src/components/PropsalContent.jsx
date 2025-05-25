@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
 
 const ProposalContent = ({ id }) => {
     //API
-    const { address, getDetailedProposal, contract, finalize, proposalVoting} = useStateContext();
+    const { getDetailedProposal, contract, finalize} = useStateContext();
 
     const [proposal, setProposal] = useState(null); 
     const [isLoading, setIsLoading] = useState(true);
@@ -53,8 +53,8 @@ const ProposalContent = ({ id }) => {
                 </div>
                 {/*上右側顯示欄*/}
                 <div className="flex md:w-[150px] w-full flex-wrap justify-between gap-[30px]">
-                    {/*<CountdownTimer title="Left" targetDate={proposal.dueDate} /> */}
-                    <CountBox title="Days Left" value={remainingDays} /> 
+                    <CountdownTimer title="Left" targetDate={proposal.dueDate*1000} /> 
+                    {/*  <CountBox title="Days Left" value={remainingDays} />  */}
                     <CountBox title={`Required ETH`} value={proposal.amount} />
                     <VotePieChart supportCount={proposal.approveVotes} rejectCount={proposal.rejectVotes} totalEligible={proposal.totalVotes} />
                 </div>
