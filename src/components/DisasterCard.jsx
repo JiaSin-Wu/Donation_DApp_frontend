@@ -9,7 +9,7 @@ const DisasterCard = ({ proposer_addr, title, description, dueDate, amount, phot
   
   return (
     <div className="sm:w-[288px] w-full rounded-[15px] bg-[#1c1c24] cursor-pointer" onClick={onClick}>
-      <img src={`https://gateway.pinata.cloud/ipfs/${photoCid}`} alt="preview" className="w-full h-[158px] object-cover rounded-[15px]"/>
+      <img src={`https://ipfs.io/ipfs/${photoCid}`} alt="preview" className="w-full h-[158px] object-cover rounded-[15px]"/>
 
       <div className="flex flex-col p-4">
         
@@ -25,8 +25,8 @@ const DisasterCard = ({ proposer_addr, title, description, dueDate, amount, phot
             <p className="mt-[3px] font-epilogue font-normal text-[12px] leading-[18px] text-[#808191] sm:max-w-[120px] truncate">Expedted ETH</p>
           </div>
           <div className="flex flex-col">
-            <h4 className="font-epilogue font-semibold text-[14px] text-[#b2b3bd] leading-[22px]">{remainingDays}</h4>
-            <p className="mt-[3px] font-epilogue font-normal text-[12px] leading-[18px] text-[#808191] sm:max-w-[120px] truncate">Days Left</p>
+            <h4 className="font-epilogue font-semibold text-[14px] text-[#b2b3bd] leading-[22px]">{remainingDays < 0 ? 'Expired' : remainingDays}</h4>
+            <p className="mt-[3px] font-epilogue font-normal text-[12px] leading-[18px] text-[#808191] sm:max-w-[120px] truncate">{remainingDays < 0 ? '' : 'Days Left'}</p>
           </div>
         </div>
 

@@ -45,7 +45,7 @@ const ProposalContent = ({ id }) => {
 
                 {/*圖片顯示處*/}
                 <div className="flex-1 flex-col">
-                    <img src={`https://gateway.pinata.cloud/ipfs/${proposal.photoCid}`} alt="campaign" className="w-full h-[410px] object-cover rounded-xl" />
+                    <img src={`https://ipfs.io/ipfs/${proposal.photoCid}`} alt="campaign" className="w-full h-[410px] object-cover rounded-xl" />
                     <div className="relative w-full h-[5px] bg-[#3a3a43] mt-2">
                         <div className="absolute h-full bg-[#4acd8d]" style={{ width: `${calculateBarPercentage(proposal.target, proposal.amountCollected)}%`, maxWidth: '100%' }}>
                         </div>

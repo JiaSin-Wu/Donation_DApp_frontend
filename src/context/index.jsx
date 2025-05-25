@@ -237,6 +237,29 @@ export const StateContextProvider = ({ children }) => {
           } 
     }
 
+    //Proposal voted record
+     const getProposalVoteRecord = async (proposalId) => {
+          try {
+            const hasVoted = await contract.call("proposalHasVoted", [proposalId, address]);
+
+            if (!hasVoted) {
+              return { voted: false, voteType: null };
+            }
+
+            const voteType = await contract.call("proposalVoteType", [proposalId, address]);
+            return { voted: true, voteType }; // voteType: true = 同意, false = 反對
+          } catch (error) {
+            const reason = error.reason || error.message || "";
+
+            if (reason.includes("execution reverted")) {
+              toast.error("Smart contract execution reverted.");
+            } else {
+              toast.error("Failed to fetch vote record.");
+            }
+
+            return { voted: false, voteType: null };
+          }
+        };
 
 
 
@@ -333,7 +356,8 @@ export const StateContextProvider = ({ children }) => {
         getDisasterList,
         submitDisasterProposal,
         finalize,
-        proposalVoting
+        proposalVoting,
+        getProposalVoteRecord
       }}
     >
       <ToastContainer />

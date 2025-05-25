@@ -10,11 +10,15 @@ const ProposalStructure = ({id, children }) => {
         height: 0,
         width: 0,
     });
-    const { address , proposalVoting} = useStateContext();
+    const { address , proposalVoting, getProposalVoteRecord } = useStateContext();
 
 
     const [voteLoading, setVoteLoading] = useState(false);
     const [showActionButtons, setShowActionButtons] = useState(false);
+    const [voteStatus, setVoteStatus] = useState({
+        voted: false,
+        voteType: null, // true: approve, false: reject
+      });
     
 
     const handleAction = async (action) => {
@@ -49,25 +53,25 @@ const ProposalStructure = ({id, children }) => {
 
                 setPosition({
                     left: rect.left,
-                    top: absoluteTop,           // ✅ 修正後的 top
+                    bottom: rect.bottom,           // ✅ 修正後的 top
                     height: rect.height,
                     width: rect.width,
-                });
-
-                const midpoint = rect.top + rect.height / 3 * 2;
-                setShowActionButtons(midpoint < window.innerHeight);
+                }); 
             }
         };
-
         updatePosition();
-        window.addEventListener('scroll', updatePosition);
-        window.addEventListener('resize', updatePosition);
-
-        return () => {
-            window.removeEventListener('scroll', updatePosition);
-            window.removeEventListener('resize', updatePosition);
-        };
     }, []);
+
+    // 初始化讀取投票紀錄
+      useEffect(() => {
+        const fetchVoteStatus = async () => {
+          if (address && id) {
+            const result = await getProposalVoteRecord(id, address);
+            setVoteStatus(result);
+          }
+        };
+        fetchVoteStatus();
+      }, [address, id, getProposalVoteRecord]);
 
 
     return (
@@ -75,30 +79,42 @@ const ProposalStructure = ({id, children }) => {
             
            
             {/* Support / Reject 按鈕：容器正下方中央 */}
-            {showActionButtons && (
                 <div
-                    className="fixed flex gap-4 z-50"
-                    style={{
-                        top: window.innerHeight - 80, // ✅ container 下方 20px
-                        left: position.left + position.width / 2,  // ✅ container 中心
-                        transform: 'translateX(-50%)',
-                    }}
+                  className="fixed flex gap-4 z-50"
+                  style={{
+                    top: window.innerHeight - 80,
+                    left: position.left + position.width / 2,
+                    transform: 'translateX(-50%)',
+                  }}
                 >
-                    <button 
+                  {voteStatus.voted ? (
+                    <div className="text-lg font-semibold">
+                      {voteStatus.voteType ? (
+                        <span className= "text-white bg-[#1dc071] px-4 py-2 rounded-full font-semibold">You voted Support</span>
+                      ) : (
+                        <span className="text-white bg-[#f04438] px-4 py-2 rounded-full font-semibold">You voted Reject</span>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <button
                         className="bg-[#1dc071] hover:bg-green-700 px-6 py-2 rounded-full font-semibold"
                         onClick={() => handleAction("support")}
-                    >
-                        Support
-                    </button>
-                    <button 
+                        disabled={voteLoading}
+                      >
+                        {voteLoading ? "Voting..." : "Support"}
+                      </button>
+                      <button
                         className="bg-[#f04438] hover:bg-red-700 px-6 py-2 rounded-full font-semibold"
                         onClick={() => handleAction("reject")}
-                    >
-                        Reject
-                    </button>
+                        disabled={voteLoading}
+                      >
+                        {voteLoading ? "Voting..." : "Reject"}
+                      </button>
+                    </>
+                  )}
                 </div>
-            )}
-
+  
             {/* 中央內容容器 */}
             <div
                 ref={containerRef}

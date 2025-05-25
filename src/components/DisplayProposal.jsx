@@ -20,6 +20,8 @@ const DisplayProposal = ({ title}) => {
     const [disaster_status, set_disaster_status] =   useState('Active'); 
     const [showModal, setShowModal] = useState(false);
   const { address, getProposals} = useStateContext();
+    const reversedProposals = proposals.slice().reverse();
+
   
 
 
@@ -34,7 +36,7 @@ const DisplayProposal = ({ title}) => {
     }, [selectedDisasterId, displayType]);
 
             
-  const currentIndex = proposals.findIndex(p => p.proposal_id === selectedProposalId);
+  const currentIndex = reversedProposals.findIndex(p => p.proposal_id === selectedProposalId);
 
 
   return (
@@ -111,7 +113,7 @@ const DisplayProposal = ({ title}) => {
 
 
         {/* Main content */}       
-        {!isLoading && proposals.slice().reverse().map((proposal, index) => (
+        {!isLoading && reversedProposals.map((proposal, index) => (
           <DisasterCard
             key={`campaign-${index}`}
             {...proposal}
@@ -139,7 +141,7 @@ const DisplayProposal = ({ title}) => {
               {/* 左箭頭，fixed 貼齊螢幕左邊 */}
             <button
               onClick={() => {
-                if (currentIndex > 0) setSelectedProposalId(proposals[currentIndex - 1].proposal_id);
+                if (currentIndex > 0) setSelectedProposalId(reversedProposals[currentIndex - 1].proposal_id);
               }}
               disabled={currentIndex === 0}
               style={{
@@ -157,7 +159,7 @@ const DisplayProposal = ({ title}) => {
             {/* 右箭頭，fixed 貼齊螢幕右邊 */}
             <button
               onClick={() => {
-                if (currentIndex < proposals.length - 1) setSelectedProposalId(proposals[currentIndex + 1].proposal_id);
+                if (currentIndex < proposals.length - 1) setSelectedProposalId(reversedProposals[currentIndex + 1].proposal_id);
               }}
               disabled={currentIndex === proposals.length - 1}
               style={{
