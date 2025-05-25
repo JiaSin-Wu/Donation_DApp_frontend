@@ -7,31 +7,13 @@ export const navlinks = [
     name: 'Introduction',
     imgUrl: dashboard,
     link: '/introduction',
-    id: 11
-  },
-  {
-    name: 'Donate Now',
-    imgUrl: payment,
-    link: '/donate-now',
-    id: 12
-  },
-  {
-    name: 'Request Funds',
-    imgUrl: createCampaign,
-    link: '/application',
-    id: 2
-  },
-  {
-    name: 'Proposal Voting',
-    imgUrl: vote,
-    link: '/proposal-voting',
-    id: 8
+    id: 1
   },
   {
     name: 'Add Disaster',
     imgUrl: createCampaign,
     link: '/add-disaster',
-    id: 1
+    id: 2
   },
   {
     name: 'Disaster Voting',
@@ -40,35 +22,10 @@ export const navlinks = [
     id: 3
   },
   {
-    name: 'Application',
-    imgUrl: createCampaign,
-    link: '/application',
-    id: 2
-  },
-  {
-    name: 'Profile',
-    imgUrl: profile,
-    link: '/profile',
-    id: 4
-  },
-  {
-    name: 'Logout',
-    imgUrl: logout,
-    link: '/',
-    disabled: true,
-    id: 5
-  },
-  {
-    name: 'Proposal Voting',
-    imgUrl: vote,
-    link: '/proposal-voting',
-    id: 8
-  },
-  {
     name: 'Donation',
     imgUrl: payment,
     link: '/donation',
-    id: 9
+    id: 4
   },
   {
     name: 'Donation Record',
@@ -76,7 +33,20 @@ export const navlinks = [
     imgUrl: payment,
     link: '/donation-lookup',
     id: 10
-  }
+  },
+  {
+    name: 'Application',
+    imgUrl: createCampaign,
+    link: '/application',
+    id: 2
+  },
+
+  {
+    name: 'Proposal Voting',
+    imgUrl: vote,
+    link: '/proposal-voting',
+    id: 8
+  },
 ];
 
 export const DisasterResponseAddress = contractAddress.contractAddress;
