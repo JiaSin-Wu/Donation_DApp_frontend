@@ -129,7 +129,8 @@ const Introduction = () => {
               <p className="font-epilogue font-normal text-[16px] text-[#e0e0e6] leading-7 mb-6">
                 By participating in Donation DApp, you become part of a global community committed to making 
                 positive change through transparent giving. Your contributions can make a real difference, 
-                and you'll always know exactly how your funds are being used.
+                and you'll always know exactly how your funds are being used. You can participate by donations,
+                voting on proposals, or even submitting disaster reports to help us identify new areas in need.
               </p>
               <div className="flex flex-wrap gap-3 mb-4">
                 <span className="px-3 py-1 bg-gradient-to-r from-[#1dc071] to-[#0ba761] rounded-full text-white text-sm animate-pulse">✓ 100% Transparency</span>
@@ -137,21 +138,6 @@ const Introduction = () => {
                 <span className="px-3 py-1 bg-gradient-to-r from-[#1dc071] to-[#0ba761] rounded-full text-white text-sm animate-pulse" style={{animationDelay: '0.6s'}}>✓ Direct Impact</span>
                 <span className="px-3 py-1 bg-gradient-to-r from-[#8c6dfd] to-[#7357d6] rounded-full text-white text-sm animate-pulse" style={{animationDelay: '0.9s'}}>✓ Zero Intermediaries</span>
               </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-5 justify-center mt-10 animate-section transition-all duration-700 opacity-0 translate-y-10">
-              <CustomButton 
-                btnType="button"
-                title="Explore Campaigns"
-                styles="bg-gradient-to-r from-[#1dc071] to-[#0ba761] text-white font-bold py-4 px-8 rounded-[10px] shadow-lg transform hover:scale-105 hover:shadow-[0_10px_25px_rgba(0,0,0,0.5)] transition-all duration-300"
-                handleClick={() => navigate('/donate-now')}
-              />
-              <CustomButton 
-                btnType="button"
-                title="Add New Disaster"
-                styles="bg-gradient-to-r from-[#8c6dfd] to-[#7357d6] text-white font-bold py-4 px-8 rounded-[10px] shadow-lg transform hover:scale-105 hover:shadow-[0_10px_25px_rgba(0,0,0,0.5)] transition-all duration-300"
-                handleClick={() => navigate('/add-disaster')}
-              />
             </div>
           </section>
         </div>
