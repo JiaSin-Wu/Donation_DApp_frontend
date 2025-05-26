@@ -208,9 +208,9 @@ export const StateContextProvider = ({ children }) => {
             if (message.includes("Already approved")) {
               alert("❌ Already approved");
             } else if (message.includes("Not enough votes")) {
-              alert("❌ Not enough vot");
+              alert("❌ Approval votes did not exceed 50%, or total votes were less than 1%.");
             } else if (message.includes("Insufficient funds")) {
-              alert("❌  Approval votes did not exceed 50%, or total votes were less than 1%.");
+              alert("❌ Insufficient funds");
             } else {
               console.error("Finalize 發生未知錯誤：", err);
               alert("❌ System error. Try later!");
