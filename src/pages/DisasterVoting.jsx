@@ -232,76 +232,85 @@ const VoteDisaster = () => {
           const hasVoted = request.hasVoted || voted[request.id];
           const voteType = request.voteType;
           
-          return (
+            return (
             <div key={request.id} className="bg-[#1c1c24] text-white p-6 rounded-lg mb-4">
               <div className="flex gap-6">
-                <div className="w-1/3">
-                  <img 
-                    src={imageUrl}
-                    alt={request.title}
-                    className="w-full h-48 object-cover rounded-lg"
-                    onError={(e) => {
-                      console.log("Image load error for:", imageUrl);
-                      e.target.onerror = null;
-                      e.target.src = DEFAULT_IMAGE;
-                    }}
-                  />
+              <div className="w-1/3">
+                <img 
+                src={imageUrl}
+                alt={request.title}
+                className="w-full h-48 object-cover rounded-lg"
+                onError={(e) => {
+                  console.log("Image load error for:", imageUrl);
+                  e.target.onerror = null;
+                  e.target.src = DEFAULT_IMAGE;
+                }}
+                />
+              </div>
+              <div className="w-2/3">
+                <h2 className="text-xl font-semibold">{request.title}</h2>
+                <p className="text-sm my-2">{request.description}</p>
+                <div className="grid grid-cols-1 gap-4 mb-4">
+                {/* <div>
+                  <p className="text-sm text-gray-400">Proposer:</p>
+                  <p className="text-sm break-all">{request.proposer}</p>
+                </div> */}
+                <div>
+                  <p className="text-sm text-gray-400">Voting Deadline:</p>
+                  <p className="text-sm">{request.votingDeadline}</p>
                 </div>
-                <div className="w-2/3">
-                  <h2 className="text-xl font-semibold">{request.title}</h2>
-                  <p className="text-sm my-2">{request.description}</p>
-                  <div className="grid grid-cols-1 gap-4 mb-4">
-                    {/* <div>
-                      <p className="text-sm text-gray-400">Proposer:</p>
-                      <p className="text-sm break-all">{request.proposer}</p>
-                    </div> */}
-                    <div>
-                      <p className="text-sm text-gray-400">Voting Deadline:</p>
-                      <p className="text-sm">{request.votingDeadline}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-400">Approve Votes:</p>
-                        <p className="text-sm text-green-500">{request.approveVotes}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-400">Reject Votes:</p>
-                        <p className="text-sm text-red-500">{request.rejectVotes}</p>
-                      </div>
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                  <p className="text-sm text-gray-400">Approve Votes:</p>
+                  <p className="text-sm text-green-500">{request.approveVotes}</p>
                   </div>
-                  <div className="flex gap-4 mt-3">
-                    <button
-                      disabled={hasVoted}
-                      onClick={() => handleVoteClick(request.id, request.title, "accept")}
-                      className={`px-4 py-2 rounded ${
-                        hasVoted 
-                          ? 'bg-gray-500 cursor-not-allowed' 
-                          : voteType === true 
-                            ? 'bg-green-600' 
-                            : 'bg-green-600 hover:bg-green-700'
-                      }`}
-                    >
-                      👍 Agree {hasVoted && voteType === true && '(Voted)'}
-                    </button>
-                    <button
-                      disabled={hasVoted}
-                      onClick={() => handleVoteClick(request.id, request.title, "reject")}
-                      className={`px-4 py-2 rounded ${
-                        hasVoted 
-                          ? 'bg-gray-500 cursor-not-allowed' 
-                          : voteType === false 
-                            ? 'bg-red-600' 
-                            : 'bg-red-600 hover:bg-red-700'
-                      }`}
-                    >
-                      👎 Disagree {hasVoted && voteType === false && '(Voted)'}
-                    </button>
+                  <div>
+                  <p className="text-sm text-gray-400">Reject Votes:</p>
+                  <p className="text-sm text-red-500">{request.rejectVotes}</p>
                   </div>
+                </div>
+                </div>
+                <div className="flex flex-col gap-6 mt-3">
+                <div className="flex gap-4">
+                  <button
+                  disabled={hasVoted}
+                  onClick={() => handleVoteClick(request.id, request.title, "accept")}
+                  className={`px-4 py-2 rounded ${
+                    hasVoted 
+                    ? 'bg-gray-500 cursor-not-allowed' 
+                    : voteType === true 
+                      ? 'bg-green-600' 
+                      : 'bg-green-600 hover:bg-green-700'
+                  }`}
+                  >
+                  👍 Agree {hasVoted && voteType === true && '(Voted)'}
+                  </button>
+                  <button
+                  disabled={hasVoted}
+                  onClick={() => handleVoteClick(request.id, request.title, "reject")}
+                  className={`px-4 py-2 rounded ${
+                    hasVoted 
+                    ? 'bg-gray-500 cursor-not-allowed' 
+                    : voteType === false 
+                      ? 'bg-red-600' 
+                      : 'bg-red-600 hover:bg-red-700'
+                  }`}
+                  >
+                  👎 Disagree {hasVoted && voteType === false && '(Voted)'}
+                  </button>
+                </div>
+                <div>
+                  <button
+                    className={`font-epilogue font-semibold text-[16px] leading-[26px] text-white min-h-[42px] px-4 rounded-[10px] w-full bg-[#8c6dfd] hover:bg-[#6b4fc9] transition-colors duration-150`}
+                  >
+                  Finalize
+                  </button>
+                </div>
                 </div>
               </div>
+              </div>
             </div>
-          );
+            );
         })
       )}
 
