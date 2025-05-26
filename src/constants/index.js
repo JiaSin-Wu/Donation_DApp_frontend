@@ -22,7 +22,7 @@ export const navlinks = [
     name: 'Application',
     imgUrl: createCampaign,
     submenu: [
-      { name: "Disaster Apllication", link: '/add-disaster' },
+      { name: "Disaster Application", link: '/add-disaster' },
       { name: "Proposal Application", link: '/application' }
     ]
   },

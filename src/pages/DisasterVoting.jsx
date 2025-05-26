@@ -21,6 +21,7 @@ const VoteDisaster = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isVoting, setIsVoting] = useState(false);
+  const [finalizingRequests, setFinalizingRequests] = useState({});
   
   const { contract } = useContract(contractAddress.toString(), abi);
   const address = useAddress();
@@ -196,6 +197,68 @@ const VoteDisaster = () => {
     }
   };
 
+  const handleFinalize = async (requestId) => {
+    if (finalizingRequests[requestId]) {
+      return;
+    }
+
+    if (!contract) {
+      toast.error("Contract not initialized");
+      return;
+    }
+
+    // Find the request to check if it's already ended
+    const request = votableRequests.find(req => req.id === requestId);
+    if (!request) {
+      toast.error("Request not found");
+      return;
+    }
+
+    if (request.ended) {
+      toast.error("This request has already been finalized");
+      return;
+    }
+
+    setFinalizingRequests(prev => ({ ...prev, [requestId]: true }));
+    try {
+      // Attempt to send the transaction
+      const tx = await contract.call("finalizeDisaster", [requestId]);
+      
+      // Show pending toast
+      toast.info("Transaction submitted, waiting for confirmation...");
+      
+      // For ThirdWeb, we don't need to wait for the transaction
+      // The transaction is already confirmed when contract.call resolves
+      
+      // Update votableRequests to remove the finalized request
+      setVotableRequests(prev => prev.filter(req => req.id !== requestId));
+      toast.success("Disaster request finalized successfully!");
+      
+    } catch (error) {
+      console.error("Finalization error:", {
+        message: error.message,
+        reason: error.reason,
+        code: error.code,
+        data: error.data
+      });
+      
+      // Handle specific error cases
+      if (error.message?.includes("user rejected")) {
+        toast.error("Transaction was rejected");
+      } else if (error.message?.includes("insufficient funds")) {
+        toast.error("Insufficient funds for gas");
+      } else if (error.message?.includes("Only admins can finalize")) {
+        toast.error("Only admins can finalize a disaster");
+      } else if (error.message?.includes("Already finalized")) {
+        toast.error("This request has already been finalized");
+      } else {
+        toast.error(error.reason || "Error finalizing disaster request");
+      }
+    } finally {
+      setFinalizingRequests(prev => ({ ...prev, [requestId]: false }));
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-8">
@@ -301,9 +364,15 @@ const VoteDisaster = () => {
                 </div>
                 <div>
                   <button
-                    className={`font-epilogue font-semibold text-[16px] leading-[26px] text-white min-h-[42px] px-4 rounded-[10px] w-full bg-[#8c6dfd] hover:bg-[#6b4fc9] transition-colors duration-150`}
+                    onClick={() => handleFinalize(request.id)}
+                    disabled={finalizingRequests[request.id] || request.ended}
+                    className={`font-epilogue font-semibold text-[16px] leading-[26px] text-white min-h-[42px] px-4 rounded-[10px] w-full ${
+                      finalizingRequests[request.id] || request.ended
+                        ? 'bg-gray-500 cursor-not-allowed'
+                        : 'bg-[#8c6dfd] hover:bg-[#6b4fc9] transition-colors duration-150'
+                    }`}
                   >
-                  Finalize
+                    {finalizingRequests[request.id] ? 'Finalizing...' : 'Finalize'}
                   </button>
                 </div>
                 </div>
