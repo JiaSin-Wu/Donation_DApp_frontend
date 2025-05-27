@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dapp-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dapp-frontend
+  template:
+    metadata:
+      labels:
+        app: dapp-frontend
+    spec:
+      containers:
+      - name: dapp-frontend
+        image: your-dockerhub-username/dapp-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+
+
