@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: dapp-frontend
-        image: your-dockerhub-username/dapp-frontend:latest
+        image: gcr.io/app-pro-461103/dapp-frontend:latest
         ports:
         - containerPort: 80
         resources:
