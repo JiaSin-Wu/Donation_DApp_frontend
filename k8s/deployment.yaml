@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: gcr.io/app-pro-461103/dapp-frontend:latest
+        image: gcr.io/dapp-pro-461103/dapp-frontend:latest
         ports:
         - containerPort: 80
         resources:
