@@ -264,7 +264,11 @@ const VoteDisaster = () => {
       <div className="p-8">
         <h1 className="text-white text-2xl font-bold mb-6">Vote on Disasters</h1>
         <div className="bg-[#1c1c24] text-white p-6 rounded-lg">
-          <p>Loading...</p>
+          {!address ? (
+            <p>You need to connect your wallet first.</p>
+          ) : (
+            <p>Loading...</p>
+          )}
         </div>
       </div>
     );
