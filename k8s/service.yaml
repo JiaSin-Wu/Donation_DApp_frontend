@@ -5,7 +5,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: dapp-frontend
+    app: frontend
   ports:
   - protocol: TCP
     port: 80
