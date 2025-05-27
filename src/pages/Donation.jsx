@@ -32,7 +32,8 @@ const get_disasterList = async () => {
             id: disaster.id,
             title: disaster.name,
             donationAddress: disaster.residualAddress,
-            image: `https://gateway.pinata.cloud/ipfs/${disaster.photoCid}`
+            image: `https://gateway.pinata.cloud/ipfs/${disaster.photoCid}`,
+            balance: disaster.balance / 1e18
         }));
         return items;
     } else {
@@ -216,6 +217,10 @@ const Donation = () => {
                                     <div className="mb-2">
                                         <strong>Donation Address : </strong>
                                         <div className="break-all ml-4 text-center">{item.donationAddress}</div>
+                                    </div>
+                                    <div className="mb-2">
+                                        <strong>remaining balance : </strong>
+                                        <div className="break-all ml-4 text-center">{item.balance} ETH</div>
                                     </div>
 
                                     {/* 捐款金額 */}
